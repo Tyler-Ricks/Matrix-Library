@@ -1,6 +1,6 @@
 #include "memoryPool.h"
 
-void printVoidPtr(void* ptr) {
+void print_void_ptr(void* ptr) {
 	printf("%p", ptr);
 }
 
@@ -15,7 +15,7 @@ void* ptr;
 }pool;
 */
 
-pool createPool(int size) {
+pool create_pool(int size) {
 	void* start;
 	if ((start = malloc(size)) == NULL) {
 		printf("palloc allocation failed, returning pool of NULL\n");
@@ -34,11 +34,11 @@ pool createPool(int size) {
 // Because the pool bumps downward, realloc will take O(n) time. (start must be at a lower index, which
 // and typical realloc really only works upwards. The solution is to allocate a whole different, resized
 // chunk of memory, then copy the original pool to the new one. Please just avoid realloc please
-void* poolrealloc(pool* frame, int input_size) {
+void* pool_realloc(pool* frame, int input_size) {
 	int old_size = ((uintptr_t)frame->end - (uintptr_t)frame->start);
 
 	if (old_size + input_size > POOL_SIZE_CAP) {
-		printf("Pool size cap hit, returning NULL");
+		printf("Pool size cap hit, returning NULL\n");
 		return NULL;
 	}
 	int new_size = old_size * GROWTH_FACTOR;
@@ -50,7 +50,7 @@ void* poolrealloc(pool* frame, int input_size) {
 	//return realloc(frame->start, size);
 	void* start;
 	if ((start = malloc(new_size)) == NULL) {
-		printf("realloc failed, returning original pool\n");
+		printf("realloc failed, returning NULL\n");
 		return frame->start;
 	}
 
@@ -83,7 +83,7 @@ void* poolrealloc(pool* frame, int input_size) {
 	free(frame->start);
 
 	frame->start = start;
-	frame->end = (void*)((uintptr_t)start + new_size);;
+	frame->end = (void*)((uintptr_t)start + new_size);
 	frame->ptr = frame->end;
 
 	// returns a pointer to the start, for usage in palloc
@@ -93,15 +93,21 @@ void* poolrealloc(pool* frame, int input_size) {
 // allocates memory from pool, and bumps ptr down by size
 // if bump exceeds frame size, do nothing for now, but configure it
 // to realloc later
-void* palloc(pool* frame, void* input, int size) {
+void* pool_alloc(pool* frame, void* input, int size) {
 
 	void* bump = (void*)((uintptr_t) frame->ptr - size);
+	void* check = frame->start;
 
 	// This is just a safety feature. Please preallocate enough memory for the pool and don't rely on this
 	if ((uintptr_t)bump < (uintptr_t)frame->start) { // bump steps past the start address of our frame
-		printf("palloc ran out of space in frame, reallocating\n");
+		printf("pool_alloc ran out of space in frame, reallocating\n");
 		//return(NULL);
-		poolrealloc(frame, size);
+		check = pool_realloc(frame, size);
+	}
+
+	if (!check) { // catches failed realloc or null frame pointer
+		printf("pool_realloc failed, returning NULL\n");
+		return NULL;
 	}
 
 	// store an input 
@@ -117,7 +123,7 @@ void* palloc(pool* frame, void* input, int size) {
 	return bump;
 }
 
-void poolFree(pool* frame) {
+void free_pool(pool* frame) {
 	free(frame->start);
 	frame->start = NULL;
 	frame->end = NULL;
@@ -125,18 +131,21 @@ void poolFree(pool* frame) {
 }
 
 int main() {
-	pool intPool = createPool(sizeof(int) * 2);
+	// main doesn't currently check for null returns on allocations
+	pool intPool = create_pool(sizeof(int) * 2);
 	int x = 4;
-	int* a = (int*)palloc(&intPool, &x, sizeof(int));
+	int* a = (int*)pool_alloc(&intPool, &x, sizeof(int));
 	int y = 128;
-	int* b = (int*)palloc(&intPool, &y, sizeof(int));
+	int* b = (int*)pool_alloc(&intPool, &y, sizeof(int));
 
 	printf("x: %d, y: %d\n", *a, *b);
 
 	int z = 500;
-	int* c = (int*)palloc(&intPool, &z, sizeof(int)); // should fail, because it runs out of space
+	int* c = (int*)pool_alloc(&intPool, &z, sizeof(int)); // should fail, because it runs out of space
 
-	printf("z: %d", *c);
+	printf("z: %d\n", *c);
 
-	poolFree(&intPool);
+	pool_alloc(&intPool, &a, sizeof(int)); // tries to allocate more space, but hits cap
+
+	free_pool(&intPool);
 }

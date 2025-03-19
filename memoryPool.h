@@ -5,10 +5,10 @@
 #include <stdio.h>
 #include <string.h> // for memcpy
 
-#define POOL_SIZE_CAP 64000
+#define POOL_SIZE_CAP 12
 #define GROWTH_FACTOR 1.5
 
-void printVoidPtr(void* ptr);
+void print_void_ptr(void* ptr);
 
 // memory pool stuff (simple bump allocator)
 
@@ -24,12 +24,12 @@ typedef struct {
 	void* ptr;
 }pool;
 
-pool createPool(int size);
+pool create_pool(int size);
 
-void* poolrealloc(pool* frame, int input_size);
+void* pool_realloc(pool* frame, int input_size);
 
-void* palloc(pool* frame, void* input, int size);
+void* pool_alloc(pool* frame, void* input, int size);
 
-void freePool(pool*);
+void pool_free(pool*);
 
 #endif
