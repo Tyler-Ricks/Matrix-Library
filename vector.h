@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-typedef struct vec3{
+typedef struct{
 	float x, y, z;
 }vec3;
 
@@ -22,4 +22,4 @@ vec3 normalize(vec3 u);
 
 float angle(vec3 u, vec3 v);
 
-void printVec(vec3 v);
+void printVec3(vec3 u);
