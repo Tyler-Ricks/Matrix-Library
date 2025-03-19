@@ -38,7 +38,7 @@ vec3 cross(vec3 u, vec3 v) {
 }
 
 float magnitude(vec3 u) {
-	return sqrt(dot(u, u));
+	return (float) sqrtf(dot(u, u));
 }
 
 float distance(vec3 u, vec3 v) {
@@ -53,20 +53,22 @@ vec3 normalize(vec3 u) {
 }
 // returns the angle made by two vectors
 float angle(vec3 u, vec3 v) {
-	return acos(dot(u, v) / (magnitude(u) * magnitude(v)));
+	return acosf(dot(u, v) / (magnitude(u) * magnitude(v)));
 }
 
-void printVec(vec3 vector) {
-	printf("{%g, %g, %g}\n", vector.x, vector.y, vector.z);
+void printVec3(vec3 u) {
+	printf("{%g, %g, %g}\n", u.x, u.y, u.z);
 }
 
-int main() {
 
-	vec3 u = { 0.0, 1.0, 2.0 };
+//int main() {
 
-	printVec(scale(3.0f, u));
+	/*vec3 u = {0.0, 1.0, 2.0};
+
+	printVec3(scale(3.0f, u));
 
 	printf("%g\n", magnitude(u));
 
-	printf("%g\n", magnitude(normalize(u)));
-}
+	printf("%g\n", magnitude(normalize(u)));*/
+
+//}
