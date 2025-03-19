@@ -26,7 +26,7 @@ typedef struct {
 
 pool createPool(int size);
 
-void* poolrealloc(pool* frame, int input_size);
+void* poolRealloc(pool* frame, int input_size);
 
 void* palloc(pool* frame, void* input, int size);
 
