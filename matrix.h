@@ -21,6 +21,8 @@ typedef struct{
 
 fmatrix create_fmatrix(int m, int n, float* matrix, pool* frame);
 
+fmatrix fmatrix_add(fmatrix matA, fmatrix matB, pool *frame);
+
 void print_matrix(fmatrix mat);
 
 #endif MATRIX_H
