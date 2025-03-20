@@ -8,6 +8,9 @@
 
 #include "memoryPool.h"
 
+// macro so I can just use a 1D array for matrix struct
+#define MATRIX_AT(mat, i, j) (mat.matrix[i, i * mat.n + j])
+
 // float matrix
 typedef struct{
 	// rows, columns
@@ -17,5 +20,7 @@ typedef struct{
 }fmatrix;
 
 fmatrix create_fmatrix(int m, int n, float* matrix, pool* frame);
+
+void print_matrix(fmatrix mat);
 
 #endif MATRIX_H
