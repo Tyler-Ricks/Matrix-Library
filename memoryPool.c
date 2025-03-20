@@ -37,7 +37,7 @@ pool create_pool(int size) {
 // chunk of memory, then copy the original pool to the new one. Please just avoid realloc please
 //
 // This function also modifies frame, so keep that in mind
-void* poolRealloc(pool* frame, int input_size) {
+void* pool_realloc(pool* frame, int input_size) {
 	int old_size = ((char*)frame->end - (char*)frame->start);
 
 	if (old_size + input_size > POOL_SIZE_CAP) {
@@ -137,7 +137,7 @@ void free_pool(pool* frame) {
 	frame->ptr = NULL;
 }
 
-int main() {
+/*int main() {
 	// main doesn't currently check for null returns on allocations
 	pool intPool = create_pool(sizeof(int) * 2);
 	int x = 4;
@@ -155,4 +155,4 @@ int main() {
 	pool_alloc(&intPool, &a, sizeof(int)); // tries to allocate more space, but hits cap
 
 	free_pool(&intPool);
-}
+}*/
