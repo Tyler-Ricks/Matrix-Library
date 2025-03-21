@@ -25,18 +25,18 @@ fmatrix create_fmatrix(int m, int n, float* matrix, pool *frame);
 
 fmatrix fmatrix_add(fmatrix matA, fmatrix matB, pool *frame);
 fmatrix fmatrix_subtract(fmatrix matA, fmatrix matB, pool *frame);
-fmatrix fmatrix_scale(fmatrix mat, float c);
+fmatrix fmatrix_scale(fmatrix mat, float c, pool *frame);
 
 float get_fmultiplied(fmatrix matA, fmatrix matB, int i, int j);
 fmatrix fmatrix_multiply(fmatrix matA, fmatrix matB, pool *frame);
 
 fmatrix fmatrix_transpose(fmatrix mat, pool *frame);
 
-fmatrix fmatrix_row_scale(fmatrix mat, int row, float c);
+fmatrix fmatrix_row_scale(fmatrix mat, int row, float c, pool *frame);
 
-fmatrix fmatrix_row_swap(fmatrix mat, int row1, int row2);
+fmatrix fmatrix_row_swap(fmatrix mat, int row1, int row2, pool *frame);
 
-fmatrix fmatrix_row_sum(fmatrix mat, int row1, float c1, int row2, float c2);
+fmatrix fmatrix_row_sum(fmatrix mat, int src, float c1, int dest, float c2, pool *frame);
 
 void print_matrix(fmatrix mat);
 

@@ -72,7 +72,7 @@ fmatrix fmatrix_subtract(fmatrix matA, fmatrix matB, pool *frame) {
 	return (fmatrix) {matA.m, matA.n, result};
 }
 
-fmatrix fmatrix_scale(fmatrix mat, float c, pool* frame) {
+fmatrix fmatrix_scale(fmatrix mat, float c, pool *frame) {
 	float* result;
 	if ((result = (float*)raw_pool_alloc(frame, mat.m * mat.n * sizeof(float))) == NULL) {
 		printf("error while subtracting: \npool allocation failure\n");
@@ -198,6 +198,34 @@ fmatrix fmatrix_row_swap(fmatrix mat, int row1, int row2, pool *frame) {
 	return (fmatrix) {mat.m, mat.n, result};
 }
 
+fmatrix fmatrix_row_sum(fmatrix mat, int src, float c1, int dest, float c2, pool* frame) {
+	if (src >= mat.m) {
+		printf("row_swap error: \src row %d out of bounds (make sure you are 0-indexed)\n", src);
+		return (fmatrix){ 0, 0, NULL};
+	}
+	if (dest >= mat.m) {
+		printf("row_swap error: \dest row %d out of bounds (make sure you are 0-indexed)\n", dest);
+		return (fmatrix){ 0, 0, NULL};
+	}
+
+	float* result;
+	int size = mat.m * mat.n * sizeof(float);
+	if ((result = (float*)raw_pool_alloc(frame, size)) == NULL) {
+		printf("error while row scaling: \npool allocation failure\n");
+		return (fmatrix) {0, 0, NULL};
+	}
+
+	result = memcpy(result, mat.matrix, size);
+
+	int i;
+	
+	for (i = 0; i < mat.n; i++) {
+		result[INDEX_AT(mat, dest, i)] = (c2 * (MATRIX_AT(mat, dest, i))) + (c1 * (MATRIX_AT(mat, src, i)));
+	}
+
+	return (fmatrix){ mat.m, mat.n, result};
+}
+
 
 // Utilities
 
@@ -249,6 +277,9 @@ int main() {
 
 	printf("\nR1 of A swapped with R3:\n");
 	print_matrix(fmatrix_row_swap(A, 0, 2, &frame));
+
+	printf("\n2R1 of A + 3R2\n");
+	print_matrix(fmatrix_row_sum(A, 1, 3.0, 0, 2.0, &frame));
 
 
 	// free the memory pool after its use
