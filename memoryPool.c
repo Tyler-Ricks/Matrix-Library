@@ -37,7 +37,7 @@ pool create_pool(int size) {
 // chunk of memory, then copy the original pool to the new one. Please just avoid realloc please
 //
 // This function also modifies frame, so keep that in mind
-void* poolRealloc(pool* frame, int input_size) {
+void* pool_realloc(pool* frame, int input_size) {
 	int old_size = ((char*)frame->end - (char*)frame->start);
 
 	if (old_size + input_size > POOL_SIZE_CAP) {
@@ -130,6 +130,32 @@ void* pool_alloc(pool* frame, void* input, int size) {
 	return bump;
 }
 
+// doesn't store an input, just allocates space
+void* raw_pool_alloc(pool* frame, int size) {
+
+	void* bump = (char*) frame->ptr - size;
+	void* check = frame->start;
+
+	// This is just a safety feature. Please preallocate enough memory for the pool and don't rely on this
+	if ((char*)bump < (char*)frame->start) { // bump steps past the start address of our frame
+		printf("palloc ran out of space in frame, reallocating\n");
+		//return(NULL);
+		check = pool_realloc(frame, size);
+	}
+
+	if (!check) { // catches failed realloc or null frame pointer
+		printf("pool_realloc failed, returning NULL\n");
+		return NULL;
+	}
+
+	// bump ptr to new value
+	frame->ptr = bump;
+
+	// Return pointer to the start of what we just allocated
+	// We bump allocate downwards, so the address to the allocated memory is just bump 
+	return bump;
+}
+
 void free_pool(pool* frame) {
 	free(frame->start);
 	frame->start = NULL;
@@ -137,7 +163,7 @@ void free_pool(pool* frame) {
 	frame->ptr = NULL;
 }
 
-int main() {
+/*int main() {
 	// main doesn't currently check for null returns on allocations
 	pool intPool = create_pool(sizeof(int) * 2);
 	int x = 4;
@@ -155,4 +181,4 @@ int main() {
 	pool_alloc(&intPool, &a, sizeof(int)); // tries to allocate more space, but hits cap
 
 	free_pool(&intPool);
-}
+}*/

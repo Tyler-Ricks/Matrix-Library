@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h> // for memcpy
 
-#define POOL_SIZE_CAP 12
+#define POOL_SIZE_CAP 16000
 #define GROWTH_FACTOR 1.5
 
 void print_void_ptr(void* ptr);
@@ -29,7 +29,8 @@ pool create_pool(int size);
 void* pool_realloc(pool* frame, int input_size);
 
 void* pool_alloc(pool* frame, void* input, int size);
+void* raw_pool_alloc(pool* frame, int size);
 
-void pool_free(pool*);
+void free_pool(pool*);
 
 #endif
