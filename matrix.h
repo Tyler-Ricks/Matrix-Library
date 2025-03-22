@@ -12,6 +12,8 @@
 #define MATRIX_AT(mat, i, j) (mat.matrix[i, i * mat.n + j])
 // macro to get array index given matrix index
 #define INDEX_AT(mat, i, j) (i * mat.n + j) 
+// error matrix
+# define ERROR_FMATRIX (fmatrix){ 0, 0, NULL }
 
 // float matrix
 typedef struct{
@@ -22,15 +24,25 @@ typedef struct{
 }fmatrix;
 
 fmatrix create_fmatrix(int m, int n, float* matrix, pool *frame);
+fmatrix fmatrix_copy_alloc(fmatrix mat, pool *frame);
+
+void fswap(float *a, float *b);
 
 fmatrix fmatrix_add(fmatrix matA, fmatrix matB, pool *frame);
 fmatrix fmatrix_subtract(fmatrix matA, fmatrix matB, pool *frame);
+fmatrix fmatrix_scale(fmatrix mat, float c, pool *frame);
 
 float get_fmultiplied(fmatrix matA, fmatrix matB, int i, int j);
 fmatrix fmatrix_multiply(fmatrix matA, fmatrix matB, pool *frame);
 
 fmatrix fmatrix_transpose(fmatrix mat, pool *frame);
 
-void print_matrix(fmatrix mat);
+fmatrix fmatrix_row_scale(fmatrix mat, int row, float c, pool *frame);
+
+fmatrix fmatrix_row_swap(fmatrix mat, int row1, int row2, pool *frame);
+
+fmatrix fmatrix_row_sum(fmatrix mat, int dest, float c1, int src, float c2, pool *frame);
+
+void print_fmatrix(fmatrix mat);
 
 #endif MATRIX_H
