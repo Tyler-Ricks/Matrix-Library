@@ -4,15 +4,29 @@
 fmatrix create_fmatrix(int m, int n, float* matrix, pool* frame) {
 	if (!frame || !frame->start) {
 		printf("failed to create matrix (faulty input frame). Returning empty matrix\n");
-		return (fmatrix) {0, 0, NULL};
+		return ERROR_FMATRIX;
 	}
 
 	if ((matrix = (float*)pool_alloc(frame, matrix, m * n * sizeof(float))) == NULL) {
 		printf("pool allocation for matrix failed, returing empty matrix\n");
-		return (fmatrix) {0, 0, NULL};
+		return ERROR_FMATRIX;
 	}
 
 	return (fmatrix) {m, n, matrix};
+}
+
+fmatrix fmatrix_copy_alloc(fmatrix mat, pool* frame) {
+	int size = mat.m * mat.n * sizeof(float);
+	float* result;
+
+	if ((result = (float*)raw_pool_alloc(frame, size)) == NULL) {
+		printf("error while allocation matrix\n");
+		return ERROR_FMATRIX;
+	}
+
+	memcpy(result, mat.matrix, size);
+
+	return (fmatrix) { mat.m, mat.n, result};
 }
 
 void fswap(float *a, float *b) {
@@ -34,17 +48,17 @@ fmatrix fmatrix_add(fmatrix matA, fmatrix matB, pool *frame) {
 	if (matA.m != matB.m || matA.n != matB.n) {
 		printf("error while adding: \ndimension mismatch: ");
 		printf("matrix a: (%d x %d)  matrix b: (%d x %d)\n", matA.m, matA.n, matB.m, matB.n);
-		return (fmatrix) {0, 0, NULL};
+		return ERROR_FMATRIX;
 	}
 
-	int i, size = matA.m * matB.n;
+	int size = matA.m * matB.n;
 	float* result;
 	if ((result = (float*)raw_pool_alloc(frame, size * sizeof(float))) == NULL) {
 		printf("error while adding: pool allocation failure\n");
-		return (fmatrix) {0, 0, NULL};
+		return ERROR_FMATRIX;
 	}
 
-	for (i = 0; i < size; i++) {
+	for (int i = 0; i < size; i++) {
 		result[i] = matA.matrix[i] + matB.matrix[i];
 	}
 
@@ -55,17 +69,17 @@ fmatrix fmatrix_subtract(fmatrix matA, fmatrix matB, pool *frame) {
 	if (matA.m != matB.m || matA.n != matB.n) {
 		printf("error while subtracting: \ndimension mismatch: ");
 		printf("matrix a: (%d x %d)  matrix b: (%d x %d)\n", matA.m, matA.n, matB.m, matB.n);
-		return (fmatrix) {0, 0, NULL};
+		return ERROR_FMATRIX;
 	}
 
-	int i, size = matA.m * matB.n;
+	int size = matA.m * matB.n;
 	float* result;
 	if ((result = (float*)raw_pool_alloc(frame, size * sizeof(float))) == NULL) {
 		printf("error while subtracting: \npool allocation failure\n");
-		return (fmatrix) {0, 0, NULL};
+		return ERROR_FMATRIX;
 	}
 
-	for (i = 0; i < size; i++) {
+	for (int i = 0; i < size; i++) {
 		result[i] = matA.matrix[i] - matB.matrix[i];
 	}
 
@@ -76,12 +90,11 @@ fmatrix fmatrix_scale(fmatrix mat, float c, pool *frame) {
 	float* result;
 	if ((result = (float*)raw_pool_alloc(frame, mat.m * mat.n * sizeof(float))) == NULL) {
 		printf("error while subtracting: \npool allocation failure\n");
-		return (fmatrix) {0, 0, NULL};
+		return ERROR_FMATRIX;
 	}
 
-	int i, j;
-	for (i = 0; i < mat.m; i++) {
-		for (j = 0; j < mat.n; j++) {
+	for (int i = 0; i < mat.m; i++) {
+		for (int j = 0; j < mat.n; j++) {
 			result[INDEX_AT(mat, i, j)] = c * MATRIX_AT(mat, i, j);
 		}
 	}
@@ -92,8 +105,8 @@ fmatrix fmatrix_scale(fmatrix mat, float c, pool *frame) {
 // does the dot product of row i of matA by column j of matB
 float get_fmultiplied(fmatrix matA, fmatrix matB, int i, int j) {
 	float result = 0;
-	int a;
-	for (a = 0; a < matA.n; a++) {
+
+	for (int a = 0; a < matA.n; a++) {
 		result += (MATRIX_AT(matA, i, a)) * (MATRIX_AT(matB, a, j));
 	}
 
@@ -105,19 +118,18 @@ fmatrix fmatrix_multiply(fmatrix matA, fmatrix matB, pool *frame) {
 	if (matA.n != matB.m) {
 		printf("error while multiplying: \ndimension mismatch: ");
 		printf("matrix a: (%d x _%d_)  matrix b: (_%d_ x %d)\n", matA.m, matA.n, matB.m, matB.n);
-		return (fmatrix) {0, 0, NULL};
+		return ERROR_FMATRIX;
 	}
 	// new matrix has row count of A and col count of B
 	int size = matA.m * matB.n;
 	float* result;
 	if ((result = (float*)raw_pool_alloc(frame, size * sizeof(float))) == NULL) {
 		printf("error while subtracting: \npool allocation failure\n");
-		return (fmatrix) {0, 0, NULL};
+		return ERROR_FMATRIX;
 	}
 
-	int i, j;
-	for (i = 0; i < matA.m; i++) {
-		for(j = 0; j < matB.n; j++){
+	for (int i = 0; i < matA.m; i++) {
+		for(int j = 0; j < matB.n; j++){
 			result[i * matB.n + j] = get_fmultiplied(matA, matB, i, j);
 		}
 	}
@@ -131,12 +143,11 @@ fmatrix fmatrix_transpose(fmatrix mat, pool* frame) {
 	float* result;
 	if ((result = (float*)raw_pool_alloc(frame, r * c * sizeof(float))) == NULL) {
 		printf("error while transposing: \npool allocation failure\n");
-		return (fmatrix) {0, 0, NULL};
+		return ERROR_FMATRIX;
 	}
 
-	int i, j;
-	for (i = 0; i < r; i++) {
-		for (j = 0; j < c; j++){
+	for (int i = 0; i < r; i++) {
+		for (int j = 0; j < c; j++){
 			result[INDEX_AT(mat, i, j)] = MATRIX_AT(mat, j, i);
 		}
 	}
@@ -151,24 +162,24 @@ fmatrix fmatrix_transpose(fmatrix mat, pool* frame) {
 fmatrix fmatrix_row_scale(fmatrix mat, int row, float c, pool *frame) {
 	if (row >= mat.m) {
 		printf("row_scale error: \nrow %d out of bounds (make sure you are 0-indexed)\n", row);
-		return (fmatrix){ 0, 0, NULL};
+		return ERROR_FMATRIX;
 	}
 
-	float* result;
-	int size = mat.m * mat.n * sizeof(float);
-	if ((result = (float*)raw_pool_alloc(frame, size)) == NULL) {
-		printf("error while row scaling: \npool allocation failure\n");
-		return (fmatrix) {0, 0, NULL};
+	fmatrix result = fmatrix_copy_alloc(mat, frame);
+	if (!result.matrix) { return result; }
+
+	if (c == 0.0) {
+		memset(result.matrix + (row * result.n), 0, result.n * sizeof(float));
+		return result;
 	}
 
-	result = memcpy(result, mat.matrix, size);
+	if (c == 1.0) { return result; }
 
-	int i;
-	for (i = 0; i < mat.n; i++) {
-		result[INDEX_AT(mat, row, i)] *= c;
+	for (int i = 0; i < mat.n; i++) {
+		result.matrix[INDEX_AT(result, row, i)] *= c;
 	}
 
-	return (fmatrix) {mat.m, mat.n, result};
+	return result;
 }
 
 fmatrix fmatrix_row_swap(fmatrix mat, int row1, int row2, pool *frame) {
@@ -181,59 +192,49 @@ fmatrix fmatrix_row_swap(fmatrix mat, int row1, int row2, pool *frame) {
 		return (fmatrix){ 0, 0, NULL};
 	}
 
-	float* result;
-	int size = mat.m * mat.n * sizeof(float);
-	if ((result = (float*)raw_pool_alloc(frame, size)) == NULL) {
-		printf("error while row scaling: \npool allocation failure\n");
-		return (fmatrix) {0, 0, NULL};
+	fmatrix result = fmatrix_copy_alloc(mat, frame);
+	if(!result.matrix){ return result; }
+
+	for (int i = 0; i < mat.n; i++) {
+		fswap(&result.matrix[INDEX_AT(mat, row1, i)], 
+			  &result.matrix[INDEX_AT(mat, row2, i)]);
 	}
 
-	result = memcpy(result, mat.matrix, size);
-
-	int i;
-	for (i = 0; i < mat.n; i++) {
-		fswap(&result[INDEX_AT(mat, row1, i)], &result[INDEX_AT(mat, row2, i)]);
-	}
-
-	return (fmatrix) {mat.m, mat.n, result};
+	return result;
 }
 
-fmatrix fmatrix_row_sum(fmatrix mat, int src, float c1, int dest, float c2, pool* frame) {
+fmatrix fmatrix_row_sum(fmatrix mat, int dest, float c1, int src, float c2, pool* frame) {
 	if (src >= mat.m) {
-		printf("row_swap error: \src row %d out of bounds (make sure you are 0-indexed)\n", src);
+		printf("row_sum error: \src row %d out of bounds (make sure you are 0-indexed)\n", src);
 		return (fmatrix){ 0, 0, NULL};
 	}
 	if (dest >= mat.m) {
-		printf("row_swap error: \dest row %d out of bounds (make sure you are 0-indexed)\n", dest);
+		printf("row_sum error: \dest row %d out of bounds (make sure you are 0-indexed)\n", dest);
 		return (fmatrix){ 0, 0, NULL};
 	}
 
-	float* result;
-	int size = mat.m * mat.n * sizeof(float);
-	if ((result = (float*)raw_pool_alloc(frame, size)) == NULL) {
-		printf("error while row scaling: \npool allocation failure\n");
-		return (fmatrix) {0, 0, NULL};
-	}
+	fmatrix result = fmatrix_copy_alloc(mat, frame);
+	if(!result.matrix){ return result; }
 
-	result = memcpy(result, mat.matrix, size);
-
-	int i;
+	float value; // for avoiding redundant multiplying by 0
 	
-	for (i = 0; i < mat.n; i++) {
-		result[INDEX_AT(mat, dest, i)] = (c2 * (MATRIX_AT(mat, dest, i))) + (c1 * (MATRIX_AT(mat, src, i)));
+	for (int i = 0; i < mat.n; i++) { 
+		value = 0.0f;
+		if(c1 != 0){value += (c1 * MATRIX_AT(mat, dest, i));}
+		if(c2 != 0){value += (c2 * MATRIX_AT(mat, src,  i));}
+		// result[INDEX_AT(mat, dest, i)] = (c1 * (MATRIX_AT(mat, dest, i))) + (c2 * (MATRIX_AT(mat, src, i)));
+		result.matrix[INDEX_AT(mat, dest, i)] = value;
 	}
 
-	return (fmatrix){ mat.m, mat.n, result};
+	return result;
 }
-
 
 // Utilities
 
-void print_matrix(fmatrix mat) {
+void print_fmatrix(fmatrix mat) {
 	// null matrix has 0 dimension, so doesn't print
-	int i, j;
-	for (i = 0; i < mat.m; i++) {
-		for (j = 0; j < mat.n; j++) {
+	for (int i = 0; i < mat.m; i++) {
+		for (int j = 0; j < mat.n; j++) {
 			printf("%4.3f ", MATRIX_AT(mat, i, j));
 		}
 		printf("\n");
@@ -258,29 +259,16 @@ int main() {
 	fmatrix B = create_fmatrix(3, 1, matrixb, &frame);
 	
 	printf("A:\n");
-	print_matrix(A);
-	printf("\nB:\n");
-	print_matrix(B);
-	printf("\n");
+	print_fmatrix(A);
 
-	printf("A x B:\n");
-	print_matrix(fmatrix_multiply(A, B, &frame));
+	printf("\nA[0][0]R2 - A[1][0]R1\n");
+	fmatrix result = create_fmatrix(rows, columns, matrixa, &frame);
+	result = fmatrix_row_sum(result, 1, MATRIX_AT(result, 0, 0), 0, -MATRIX_AT(result, 1, 0), &frame);
 
-	printf("\ntranspose(A):\n");
-	print_matrix(fmatrix_transpose(A, &frame));
+	print_fmatrix(result);
 
-	printf("\nA scaled by 2:\n");
-	print_matrix(fmatrix_scale(A, 2.0, &frame));
-
-	printf("\nR1 of A times 0.5:\n");
-	print_matrix(fmatrix_row_scale(A, 3, 0.5, &frame));
-
-	printf("\nR1 of A swapped with R3:\n");
-	print_matrix(fmatrix_row_swap(A, 0, 2, &frame));
-
-	printf("\n2R1 of A + 3R2\n");
-	print_matrix(fmatrix_row_sum(A, 1, 3.0, 0, 2.0, &frame));
-
+	printf("\n R2 * 2\n");
+	print_fmatrix(fmatrix_row_scale(A, 1, 2.0, &frame));
 
 	// free the memory pool after its use
 	free_pool(&frame);
