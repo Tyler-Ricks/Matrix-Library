@@ -8,10 +8,13 @@
 
 #include "memoryPool.h"
 
+// both macros check m from fmatrix for if it's negative. If it is, then treat mat as a transpose
 // macro so I can just use a 1D array for matrix struct
-#define MATRIX_AT(mat, i, j) (mat.matrix[i, i * mat.n + j])
+#define MATRIX_AT(mat, i, j) (mat.matrix[i * mat.n + j])
+#define ATTEMPT_MATRIX_AT(mat, i, j) ((mat.m < 0) ? (mat.matrix[j * -mat.m + i]) : (mat.matrix[i * mat.n + j]))
 // macro to get array index given matrix index
 #define INDEX_AT(mat, i, j) (i * mat.n + j) 
+#define ATTEMPT_INDEX_AT(mat, i, j) ((mat.m < 0) ? (j * -mat.m + i) : (i * mat.n + j))
 // error matrix
 # define ERROR_FMATRIX (fmatrix){ 0, 0, NULL }
  /*
@@ -43,12 +46,15 @@
 // conversion will be very simple at all.
 
 // CHECKLIST:
-//   1) Refactor the macros to support this idea 
-//   2) Potentially refactor everything involving mat.m/mat.n to account for potentially
-//      Negative values. 
-//   3) There's some spots where I opted to not use the macros to remove redundancy. These
-//      Will need to be fixed.
+// (done) 1) Refactor the macros to support this idea 
+//        2) Potentially refactor everything involving mat.m/mat.n to account for potentially
+//           Negative values. 
+//		  3) There's some spots where I opted to not use the macros to remove redundancy. These
+//				Will need to be fixed.
+//		  4) Refactor matrix multiplication to check for transposes for better cache performance
+//				(Do it in a column-major accumulation process so we aren't jumping around the array)
 */
+
 // float matrix
 typedef struct{
 	// rows, columns

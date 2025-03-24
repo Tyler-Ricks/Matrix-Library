@@ -2,6 +2,10 @@
 
 // allocates m by n blocks of memory of a given size in a pool
 fmatrix create_fmatrix(int m, int n, float* matrix, pool* frame) {
+	if (m < 0 || n < 0) {
+		printf("fmatrix must have positive row/columns\n");
+		return ERROR_FMATRIX;
+	}
 	if (!frame || !frame->start) {
 		printf("failed to create matrix (faulty input frame). Returning empty matrix\n");
 		return ERROR_FMATRIX;
@@ -29,6 +33,13 @@ fmatrix fmatrix_copy_alloc(fmatrix mat, pool* frame) {
 	return (fmatrix) { mat.m, mat.n, result};
 }
 
+int get_m(fmatrix mat) {
+	return (mat.m < 0) ? -mat.m : mat.m; 
+}
+int get_n(fmatrix mat) {
+	return (mat.n < 0) ? -mat.n : mat.n; 
+}
+
 void fswap(float *a, float *b) {
 	// Aw, C doesn't allow bitwise XOR on floats to swap values
 	/*
@@ -40,6 +51,12 @@ void fswap(float *a, float *b) {
 	float temp = *a;
 	*a = *b;
 	*b = temp;
+}
+
+void intswap(int* a, int* b) {
+	*a ^= *b;
+	*b ^= *a;
+	*a ^= *b;
 }
 
 // Basic matrix operations
@@ -209,19 +226,16 @@ fmatrix fmatrix_transpose(fmatrix mat, pool* frame) {
 // But the algorithm for this will take me more time to work out.
 
 // Maybe look at this too https://www.geeksforgeeks.org/inplace-m-x-n-size-matrix-transpose/
-void fmatrix_transpose_in(fmatrix mat) {
-	if(mat.m != mat.n){ 
+void fmatrix_transpose_in(fmatrix *mat) {
+	/*if (mat.m != mat.n) {
 		printf("Please input a square matrix for in-place transpose\n");
 		return;
-	}
+	}*/
 
-	for (int i = 0; i < mat.m; i++) {
-		for (int j = i + 1; j < mat.n; j++) {
-			//if(i == j){ continue; }
-			fswap(&mat.matrix[INDEX_AT(mat, i, j)],
-				  &mat.matrix[INDEX_AT(mat, j, i)]);
-		}
-	}
+	// swaps m and n, and marks mat as a transpose
+	intswap(&mat->m, &mat->n);
+	mat->m *= -1;
+	mat->n *= -1;
 }
 
 
@@ -354,9 +368,23 @@ void fmatrix_row_sum_in(fmatrix mat, int dest, float c1, int src, float c2) {
 
 void print_fmatrix(fmatrix mat) {
 	// null matrix has 0 dimension, so doesn't print
-	for (int i = 0; i < mat.m; i++) {
-		for (int j = 0; j < mat.n; j++) {
-			printf("%4.3f ", MATRIX_AT(mat, i, j));
+	int m = get_m(mat);
+	int n = get_n(mat);
+	for (int i = 0; i < m; i++) {
+		for (int j = 0; j < n; j++) {
+			printf("%4.3f ", ATTEMPT_MATRIX_AT(mat, i, j));
+		}
+		printf("\n");
+	}
+}
+
+void print_transpose(fmatrix mat) {
+	// null matrix has 0 dimension, so doesn't print
+	int m = get_m(mat);
+	int n = get_n(mat);
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < m; j++) {
+			printf("%4.3f ", ATTEMPT_MATRIX_AT(mat, i, j));
 		}
 		printf("\n");
 	}
@@ -374,10 +402,10 @@ int main() {
 	fmatrix A = create_fmatrix(rows, columns, matrixa, &frame);
 	//print_matrix(wow);
 
-	float matrixb[3][3] = {{1.5, 2.5, 3.5}, 
-						   {4.0, 5.0, 6.0}, 
-						   {7.0, 8.0, 9.0}};
-	fmatrix B = create_fmatrix(3, 3, matrixb, &frame);
+	float matrixb[3][4] = {{1.5, 2.5, 3.5, 5}, 
+						   {4.0, 5.0, 6.0, 5}, 
+						   {7.0, 8.0, 9.0, 5}};
+	fmatrix B = create_fmatrix(3, 4, matrixb, &frame);
 	
 	printf("A:\n");
 	print_fmatrix(A);
@@ -385,9 +413,15 @@ int main() {
 	printf("\nB:\n");
 	print_fmatrix(B);
 
-	printf("\nA: R2 <- 3 * R2 - 2R1\n");
-	fmatrix_row_sum_in(A, 1, 3.0, -3, -2.0);
-	print_fmatrix(A);
+	printf("\ntranspose of B\n");
+	//print_transpose(B);
+	printf("\nbefore: m = %d, n = %d\n", B.m, B.n);
+	fmatrix_transpose_in(&B);
+	//print_transpose(B);
+	printf("\nafter: m = %d, n = %d\n", B.m, B.n);
+	print_fmatrix(B);
+
+	printf("\n B[1][1] = %g", ATTEMPT_MATRIX_AT(B, 1, 1));
 
 	// free the memory pool after its use
 	free_pool(&frame);
