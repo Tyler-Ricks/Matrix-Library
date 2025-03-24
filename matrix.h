@@ -5,18 +5,19 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <stdint.h>
 
 #include "memoryPool.h"
 
 // both macros check m from fmatrix for if it's negative. If it is, then treat mat as a transpose
 // macro so I can just use a 1D array for matrix struct
 #define MATRIX_AT(mat, i, j) (mat.matrix[i * mat.n + j])
-#define ATTEMPT_MATRIX_AT(mat, i, j) ((mat.m < 0) ? (mat.matrix[j * -mat.m + i]) : (mat.matrix[i * mat.n + j]))
+#define ATTEMPT_MATRIX_AT(mat, i, j) ((mat.transpose) ? (mat.matrix[j * mat.m + i]) : (mat.matrix[i * mat.n + j]))
 // macro to get array index given matrix index
 #define INDEX_AT(mat, i, j) (i * mat.n + j) 
-#define ATTEMPT_INDEX_AT(mat, i, j) ((mat.m < 0) ? (j * -mat.m + i) : (i * mat.n + j))
+#define ATTEMPT_INDEX_AT(mat, i, j) ((mat.transpose) ? (j * mat.m + i) : (i * mat.n + j))
 // error matrix
-# define ERROR_FMATRIX (fmatrix){ 0, 0, NULL }
+# define ERROR_FMATRIX (fmatrix){ 0, 0, NULL, 0 }
  /*
 // I have a really strange idea that I want to work with later.
 // I'll use the transpose operation as an example. Currently, it takes O(mn), because we
@@ -40,15 +41,12 @@
 // Of course, implementing it as a direct column operation is a little faster, but I 
 // still like this trick
 
-// To indicate that a matrix should be read in column major order, m and n from the 
-// fmatrix struct could be negative. This has issues because mat.m/mat.n are often
-// used for loops and such. Also, I'm not too sure if a macro that handles the read
-// conversion will be very simple at all.
+// To indicate that a matrix should be read in column major order, I'll inc;ude a flag in 
+// the fmatrix struct. 
 
 // CHECKLIST:
 // (done) 1) Refactor the macros to support this idea 
-//        2) Potentially refactor everything involving mat.m/mat.n to account for potentially
-//           Negative values. 
+//		  5) Make sure matrix multiplication works when multiplying two transposes
 //		  3) There's some spots where I opted to not use the macros to remove redundancy. These
 //				Will need to be fixed.
 //		  4) Refactor matrix multiplication to check for transposes for better cache performance
@@ -61,12 +59,19 @@ typedef struct{
 	int m, n;
 	// pointer to item at [0,0]
 	float* matrix; 
+	// flag for transpose handling
+	uint8_t transpose;
+	// padding for muh cache
+	uint8_t padding[3];
 }fmatrix;
 
 fmatrix create_fmatrix(int m, int n, float* matrix, pool *frame);
 fmatrix fmatrix_copy_alloc(fmatrix mat, pool *frame);
+int fmatrix_get_m(fmatrix mat);
+int fmatrix_get_n(fmatrix mat);
 
 void fswap(float *a, float *b);
+void intswap(int *a, int *b);
 
 fmatrix fmatrix_add(fmatrix matA, fmatrix matB, pool *frame);
 void fmatrix_add_in(fmatrix matA, fmatrix matB);
@@ -80,7 +85,7 @@ fmatrix fmatrix_multiply(fmatrix matA, fmatrix matB, pool *frame);
 void fmatrix_multiply_in(fmatrix matA, fmatrix matB);
 
 fmatrix fmatrix_transpose(fmatrix mat, pool *frame);
-void fmatrix_transpose_in(fmatrix mat);
+void fmatrix_transpose_in(fmatrix *mat);
 
 fmatrix fmatrix_row_scale(fmatrix mat, int row, float c, pool *frame);
 void fmatrix_row_scale_in(fmatrix mat, int row, float c);
