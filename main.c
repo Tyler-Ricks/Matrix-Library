@@ -110,7 +110,7 @@ void test_scale() {
 }
 
 void test_multiplication() {
-	int count33 = 3;
+	int count33 = 2;
 	int row33 = 3;
 	int col33 = 3;
 	int count31 = 4;
@@ -154,10 +154,37 @@ void test_multiplication() {
 	printf("\nx * x^t: \n");
 	print_fmatrix(fmatrix_multiply(fmatrix_transpose(x, &frame), x, &frame));
 	
+	print_pool(&frame);
+	free_pool(&frame);
+}
+
+void test_pool() {
+	int size = 2;
+	pool frame = create_pool(2 * sizeof(float));
+
+	float* x = raw_pool_alloc(&frame, sizeof(float));
+	*x = 1.0;
+	float* y = raw_pool_alloc(&frame, sizeof(float));
+	*y = 2.0;
+	//printf("before : start = %p, ptr = %p, end = %p\n", frame.start, frame.ptr, frame.end);
+
+	print_pool(&frame);
+	printf("\nsize of pool: %d\n", (char*)frame.end - (char*)frame.start);
+	printf("\nwhere is ptr?: %d\n", (char*)frame.end - (char*)frame.ptr);
+
+	float* z = raw_pool_alloc(&frame, sizeof(float));
+	*z = 3.0;
+
+	printf("\nsize of pool: %d\n", (char*)frame.end - (char*)frame.start);
+	printf("\nwhere is ptr?: %d\n", (char*)frame.end - (char*)frame.ptr);
+
+	//print_pool(&frame);
+	//printf("after : start = %p, ptr = %p, end = %p\n", frame.start, frame.ptr, frame.end);
+
 }
 
 int main() {
-	switch(4){
+	switch(5){
 	case 1:
 		test_transpose();
 		break;
@@ -169,6 +196,9 @@ int main() {
 		break;
 	case 4:
 		test_multiplication();
+		break;
+	case 5:
+		test_pool();
 		break;
 	default:
 		printf("\nnice");

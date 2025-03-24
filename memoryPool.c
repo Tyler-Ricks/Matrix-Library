@@ -15,6 +15,13 @@ void* ptr;
 }pool;
 */
 
+// prints floats from a pool for debugging
+void print_pool(pool *frame) {
+	for (int i = 0; i < (float*)frame->end - (float*)frame->ptr; i++) {
+		printf("%g ", ((float*) frame->start)[i]);
+	}
+}
+
 pool create_pool(int size) {
 	void* start;
 	if ((start = malloc(size)) == NULL) {
@@ -91,7 +98,7 @@ void* pool_realloc(pool* frame, int input_size) {
 
 	frame->start = start;
 	frame->end = (char*)start + new_size;
-	frame->ptr = frame->end;
+	frame->ptr = (char*)frame->end - allocated;
 
 	// returns a pointer to the start, for usage in palloc
 	return frame->start;
