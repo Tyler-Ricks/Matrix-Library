@@ -81,7 +81,6 @@ void fmatrix_add_in(fmatrix matA, fmatrix matB) {
 		printf("matrix a: (%d x %d)  matrix b: (%d x %d)\n", matA.m, matA.n, matB.m, matB.n);
 		return;
 	}
-	int size = matA.m * matB.n;
 	for(int i = 0; i < matB.m; i++){
 		for (int j = 0; j < matA.n; j++) {
 			matA.matrix[INDEX_AT(matA, i, j)] += matB.matrix[INDEX_AT(matB, i, j)];
@@ -96,9 +95,8 @@ fmatrix fmatrix_add(fmatrix matA, fmatrix matB, pool *frame) {
 		return ERROR_FMATRIX;
 	}
 
-	int size = matA.m * matB.n;
 	float* matrix;
-	if ((matrix = (float*)raw_pool_alloc(frame, size * sizeof(float))) == NULL) {
+	if ((matrix = (float*)raw_pool_alloc(frame, matA.m * matA.n * sizeof(float))) == NULL) {
 		printf("error while adding: pool allocation failure\n");
 		return ERROR_FMATRIX;
 	}
@@ -121,48 +119,52 @@ fmatrix fmatrix_subtract(fmatrix matA, fmatrix matB, pool *frame) {
 		return ERROR_FMATRIX;
 	}
 
-	int size = matA.m * matB.n;
-	float* result;
-	if ((result = (float*)raw_pool_alloc(frame, size * sizeof(float))) == NULL) {
-		printf("error while subtracting: \npool allocation failure\n");
+	float* matrix;
+	if ((matrix = (float*)raw_pool_alloc(frame, matA.m * matA.n * sizeof(float))) == NULL) {
+		printf("error while adding: pool allocation failure\n");
 		return ERROR_FMATRIX;
 	}
 
-	for (int i = 0; i < size; i++) {
-		result[i] = matA.matrix[i] - matB.matrix[i];
+	fmatrix result = (fmatrix) {matA.m, matA.n, matrix};
+
+	for (int i = 0; i < matA.m; i++) {
+		for(int j = 0; j < matA.n; j++){
+			result.matrix[INDEX_AT(result, i, j)] = MATRIX_AT(matA, i, j) - MATRIX_AT(matB, i, j);
+		}
 	}
 
-	return (fmatrix) {matA.m, matA.n, result};
+	return result;
 }
 
 void fmatrix_subtract_in(fmatrix matA, fmatrix matB) {
 	if (matA.m != matB.m || matA.n != matB.n) {
-		printf("error while subtracting: \ndimension mismatch: ");
+		printf("error while adding: \ndimension mismatch: ");
 		printf("matrix a: (%d x %d)  matrix b: (%d x %d)\n", matA.m, matA.n, matB.m, matB.n);
 		return;
 	}
-
-	int size = matA.m * matB.n;
-	for(int i = 0; i < size; i++)
-		matA.matrix[i] -= matB.matrix[i];
+	for(int i = 0; i < matB.m; i++){
+		for (int j = 0; j < matA.n; j++) {
+			matA.matrix[INDEX_AT(matA, i, j)] -= matB.matrix[INDEX_AT(matB, i, j)];
+		}
+	}
 }
 
 fmatrix fmatrix_scale(fmatrix mat, float c, pool *frame) {
-	float* result;
+	float* matrix;
 	int size = mat.m * mat.n;
-	if ((result = (float*)raw_pool_alloc(frame, size * sizeof(float))) == NULL) {
-		printf("error while subtracting: \npool allocation failure\n");
+	if ((matrix = (float*)raw_pool_alloc(frame, size * sizeof(float))) == NULL) {
+		printf("error while scaling: \npool allocation failure\n");
 		return ERROR_FMATRIX;
 	}
+	fmatrix result = { mat.m, mat.n, matrix};
 
-	for (int i = 0; i < size; i++) {
-		/*for (int j = 0; j < mat.n; j++) {
-			result[INDEX_AT(mat, i, j)] = c * MATRIX_AT(mat, i, j);
-		}*/
-		result[i] = c * mat.matrix[i];
+	for (int i = 0; i < mat.m; i++) {
+		for(int j = 0; j < mat.n; j++){
+			result.matrix[INDEX_AT(result, i, j)] = c * mat.matrix[INDEX_AT(mat, i, j)];
+		}
 	}
 
-	return (fmatrix){ mat.m, mat.n, result};
+	return result;
 }
 
 void fmatrix_scale_in(fmatrix mat, float c) {
@@ -170,7 +172,7 @@ void fmatrix_scale_in(fmatrix mat, float c) {
 	int size = mat.m * mat.n;
 	if(c == 0.0) { memset(mat.matrix, 0, size); return; }
 
-	for(int i; i < size; i++)
+	for(int i = 0; i < size; i++)
 		mat.matrix[i] *= c;
 }
 

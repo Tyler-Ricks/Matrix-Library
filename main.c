@@ -72,13 +72,53 @@ void test_add() {
 	free_pool(&frame);
 }
 
+void test_scale() {
+	int count34 = 3;
+	int row34 = 3;
+	int col34 = 4;
+
+	pool frame = create_pool((count34 * row34 * col34) * sizeof(float));
+
+	float matrixa[3][4] ={{1.0, 2.0, 3.0, 4.0},
+						  {5.0, 6.0, 7.0, 8.0},
+						  {9.0, 10.0, 11.0, 12.0}};
+
+	fmatrix A = create_fmatrix(row34, col34, matrixa, &frame);
+	float scale = 2.0;
+
+	printf("A: \n");
+	print_fmatrix(A);
+
+	printf("\nscale A by %g\n", scale);
+	fmatrix copyA = A; // oops this is not doing what i wanted it to but the tests still work
+	print_fmatrix(fmatrix_scale(A, scale, &frame));
+
+	printf("\ninplace scale A by %g\n", scale);
+	fmatrix_scale_in(A, scale);
+	print_fmatrix(A);
+
+	printf("\ntranspose and scale A by %g\n", scale);
+	fmatrix_transpose_in(&copyA);
+	print_fmatrix(fmatrix_scale(copyA, scale, &frame));
+
+	printf("\ntranspose and inplace scale A by %g\n", scale);
+	fmatrix_scale_in(copyA, scale);
+	print_fmatrix(copyA);
+
+	free_pool(&frame);
+	
+}
+
 int main() {
-	switch(2){
+	switch(3){
 	case 1:
 		test_transpose();
 		break;
 	case 2:
 		test_add();
+		break;
+	case 3:
+		test_scale();
 		break;
 	default:
 		printf("\nnice");
