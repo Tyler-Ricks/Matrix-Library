@@ -117,6 +117,8 @@ void* pool_alloc(pool* frame, void* input, int size) {
 		printf("palloc ran out of space in frame, reallocating\n");
 		//return(NULL);
 		check = pool_realloc(frame, size);
+		// realloc copies the frame and it's pointers to a totally different location, so bump must move too
+		bump = (char*) frame->ptr - size;
 	}
 
 	if (!check) { // catches failed realloc or null frame pointer
@@ -148,6 +150,8 @@ void* raw_pool_alloc(pool* frame, int size) {
 		printf("palloc ran out of space in frame, reallocating\n");
 		//return(NULL);
 		check = pool_realloc(frame, size);
+		// realloc copies the frame and it's pointers to a totally different location, so bump must move too
+		bump = (char*) frame->ptr - size;
 	}
 
 	if (!check) { // catches failed realloc or null frame pointer

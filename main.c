@@ -178,13 +178,14 @@ void test_pool() {
 	printf("\nsize of pool: %d\n", (char*)frame.end - (char*)frame.start);
 	printf("\nwhere is ptr?: %d\n", (char*)frame.end - (char*)frame.ptr);
 
-	//print_pool(&frame);
+	print_pool(&frame);
 	//printf("after : start = %p, ptr = %p, end = %p\n", frame.start, frame.ptr, frame.end);
 
+	free_pool(&frame);
 }
 
 int main() {
-	switch(5){
+	switch(4){
 	case 1:
 		test_transpose();
 		break;
@@ -201,7 +202,7 @@ int main() {
 		test_pool();
 		break;
 	default:
-		printf("\nnice");
+		printf("\no tests");
 	}
 
 	printf("\ndone");
