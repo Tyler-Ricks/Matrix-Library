@@ -11,11 +11,11 @@
 
 // both macros check m from fmatrix for if it's negative. If it is, then treat mat as a transpose
 // macro so I can just use a 1D array for matrix struct
-#define MATRIX_AT(mat, i, j) (mat.matrix[i * mat.n + j])
-#define ATTEMPT_MATRIX_AT(mat, i, j) ((mat.transpose) ? (mat.matrix[j * mat.m + i]) : (mat.matrix[i * mat.n + j]))
+#define OLD_MATRIX_AT(mat, i, j) (mat.matrix[i * mat.n + j])
+#define MATRIX_AT(mat, i, j) ((mat.transpose) ? (mat.matrix[j * mat.m + i]) : (mat.matrix[i * mat.n + j]))
 // macro to get array index given matrix index
-#define INDEX_AT(mat, i, j) (i * mat.n + j) 
-#define ATTEMPT_INDEX_AT(mat, i, j) ((mat.transpose) ? (j * mat.m + i) : (i * mat.n + j))
+#define OLD_INDEX_AT(mat, i, j) (i * mat.n + j) 
+#define INDEX_AT(mat, i, j) ((mat.transpose) ? (j * mat.m + i) : (i * mat.n + j))
 // error matrix
 # define ERROR_FMATRIX (fmatrix){ 0, 0, NULL, 0 }
  /*
@@ -66,6 +66,9 @@ typedef struct{
 }fmatrix;
 
 fmatrix create_fmatrix(int m, int n, float* matrix, pool *frame);
+
+void print_properties(fmatrix mat);
+void print_as_array(fmatrix mat);
 fmatrix fmatrix_copy_alloc(fmatrix mat, pool *frame);
 int fmatrix_get_m(fmatrix mat);
 int fmatrix_get_n(fmatrix mat);
@@ -73,8 +76,8 @@ int fmatrix_get_n(fmatrix mat);
 void fswap(float *a, float *b);
 void intswap(int *a, int *b);
 
-fmatrix fmatrix_add(fmatrix matA, fmatrix matB, pool *frame);
 void fmatrix_add_in(fmatrix matA, fmatrix matB);
+fmatrix fmatrix_add(fmatrix matA, fmatrix matB, pool *frame);
 fmatrix fmatrix_subtract(fmatrix matA, fmatrix matB, pool *frame);
 void fmatrix_subtract_in(fmatrix matA, fmatrix matB);
 fmatrix fmatrix_scale(fmatrix mat, float c, pool *frame);
@@ -84,8 +87,8 @@ float get_fmultiplied(fmatrix matA, fmatrix matB, int i, int j);
 fmatrix fmatrix_multiply(fmatrix matA, fmatrix matB, pool *frame);
 void fmatrix_multiply_in(fmatrix matA, fmatrix matB);
 
-fmatrix fmatrix_transpose(fmatrix mat, pool *frame);
 void fmatrix_transpose_in(fmatrix *mat);
+fmatrix fmatrix_transpose(fmatrix mat, pool *frame);
 
 fmatrix fmatrix_row_scale(fmatrix mat, int row, float c, pool *frame);
 void fmatrix_row_scale_in(fmatrix mat, int row, float c);
@@ -93,9 +96,6 @@ fmatrix fmatrix_row_swap(fmatrix mat, int row1, int row2, pool *frame);
 void fmatrix_row_swap_in(fmatrix mat, int row1, int row2);
 fmatrix fmatrix_row_sum(fmatrix mat, int dest, float c1, int src, float c2, pool *frame);
 void fmatrix_row_sum_in(fmatrix mat, int dest, float c1, int src, float c2);
-
-
-
 
 void print_fmatrix(fmatrix mat);
 

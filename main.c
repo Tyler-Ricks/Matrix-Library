@@ -16,7 +16,7 @@ void test_transpose() {
 	printf("A transpose:\n");
 	//print_fmatrix(fmatrix_transpose(A, &frame));
 	fmatrix copyA = fmatrix_transpose(A, &frame);
-	printf("\nA.m: %d, A.n: %d, A.tranpose: %d\n", copyA.m, copyA.n, copyA.transpose);
+	print_properties(copyA);
 	print_fmatrix(copyA);
 
 	printf("\nin place:\n");
@@ -26,9 +26,65 @@ void test_transpose() {
 	free_pool(&frame);
 }
 
-int main() {
+void test_add() {
+	// 2 3x4 matrices, 1 4x3 matrix
+	int count34 = 2;
+	int rows34 = 3, cols34 = 4;
 
-	test_transpose();
+	int count43 = 2;
+	int rows43 = 4, cols43 = 3;
+	pool frame = create_pool((count34 * rows34 * cols34  +
+							  count43 * rows43 * rows43) * 
+							  sizeof(float));
+
+	float matrixa[3][4] = {{1.5, 2.5, 3.5, 5},
+		{4.0, 5.0, 6.0, 5}, 
+		{7.0, 8.0, 9.0, 5}};
+	fmatrix A = create_fmatrix(rows34, cols34, matrixa, &frame);
+	printf("A:\n");
+	print_fmatrix(A);
+
+	printf("\nA + A:\n");
+	print_fmatrix(fmatrix_add(A, A, &frame));
+
+	printf("\ntranspose A + transpose A\n");
+	fmatrix_transpose_in(&A);
+	fmatrix copyA = fmatrix_add(A, A, &frame);
+	//copyA.transpose = 1;
+	print_properties(copyA);
+	print_fmatrix(copyA);
+
+	printf("\nB: \n");
+
+	float matrixb[4][3] = {{1.0, 1.0, 1.0},
+						   {1.0, 1.0, 1.0},
+						   {1.0, 1.0, 1.0},
+						   {1.0, 1.0, 1.0}};
+
+	fmatrix B = create_fmatrix(rows43, cols43, matrixb, &frame);
+	print_fmatrix(B);
+
+	printf("\ntranspose A + B\n");
+
+	fmatrix_add_in(A, B);
+	print_fmatrix(A);
+
+	free_pool(&frame);
+}
+
+int main() {
+	switch(2){
+	case 1:
+		test_transpose();
+		break;
+	case 2:
+		test_add();
+		break;
+	default:
+		printf("\nnice");
+	}
+
+	printf("\ndone");
 	/*int rows = 3;
 	int columns = 3;
 	// allocate a memory pool for allocated matrices

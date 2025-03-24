@@ -19,18 +19,31 @@ fmatrix create_fmatrix(int m, int n, float* matrix, pool* frame) {
 	return (fmatrix) {m, n, matrix};
 }
 
+void print_properties(fmatrix mat) {
+	printf("\nA.m: %d, A.n: %d, A.tranpose: %d\n", mat.m, mat.n, mat.transpose);
+}
+void print_as_array(fmatrix mat) {
+
+	for(int i = 0; i < mat.m; i++){
+		for (int j = 0; j < mat.n; j++) {
+			printf("%g ", MATRIX_AT(mat, i, j));
+		}
+	}
+	printf("\n");
+}
+
 fmatrix fmatrix_copy_alloc(fmatrix mat, pool* frame) {
 	int size = mat.m * mat.n * sizeof(float);
 	float* result;
 
 	if ((result = (float*)raw_pool_alloc(frame, size)) == NULL) {
-		printf("error while allocation matrix\n");
+		printf("error while allocating matrix\n");
 		return ERROR_FMATRIX;
 	}
 
 	memcpy(result, mat.matrix, size);
 
-	return (fmatrix) { mat.m, mat.n, result};
+	return (fmatrix) { mat.m, mat.n, result, mat.transpose};
 }
 
 int fmatrix_get_m(fmatrix mat) {
@@ -59,7 +72,22 @@ void intswap(int* a, int* b) {
 	*a ^= *b;
 }
 
+
 // Basic matrix operations
+
+void fmatrix_add_in(fmatrix matA, fmatrix matB) {
+	if (matA.m != matB.m || matA.n != matB.n) {
+		printf("error while adding: \ndimension mismatch: ");
+		printf("matrix a: (%d x %d)  matrix b: (%d x %d)\n", matA.m, matA.n, matB.m, matB.n);
+		return;
+	}
+	int size = matA.m * matB.n;
+	for(int i = 0; i < matB.m; i++){
+		for (int j = 0; j < matA.n; j++) {
+			matA.matrix[INDEX_AT(matA, i, j)] += matB.matrix[INDEX_AT(matB, i, j)];
+		}
+	}
+}
 
 fmatrix fmatrix_add(fmatrix matA, fmatrix matB, pool *frame) {
 	if (matA.m != matB.m || matA.n != matB.n) {
@@ -69,28 +97,21 @@ fmatrix fmatrix_add(fmatrix matA, fmatrix matB, pool *frame) {
 	}
 
 	int size = matA.m * matB.n;
-	float* result;
-	if ((result = (float*)raw_pool_alloc(frame, size * sizeof(float))) == NULL) {
+	float* matrix;
+	if ((matrix = (float*)raw_pool_alloc(frame, size * sizeof(float))) == NULL) {
 		printf("error while adding: pool allocation failure\n");
 		return ERROR_FMATRIX;
 	}
 
-	for (int i = 0; i < size; i++) {
-		result[i] = matA.matrix[i] + matB.matrix[i];
+	fmatrix result = (fmatrix) {matA.m, matA.n, matrix};
+
+	for (int i = 0; i < matA.m; i++) {
+		for(int j = 0; j < matA.n; j++){
+			result.matrix[INDEX_AT(result, i, j)] = MATRIX_AT(matA, i, j) + MATRIX_AT(matB, i, j);
+		}
 	}
 
-	return (fmatrix) {matA.m, matA.n, result};
-}
-
-void fmatrix_add_in(fmatrix matA, fmatrix matB) {
-	if (matA.m != matB.m || matA.n != matB.n) {
-		printf("error while adding: \ndimension mismatch: ");
-		printf("matrix a: (%d x %d)  matrix b: (%d x %d)\n", matA.m, matA.n, matB.m, matB.n);
-		return;
-	}
-	int size = matA.m * matB.n;
-	for(int i = 0; i < size; i++)
-		matA.matrix[i] += matB.matrix[i];
+	return result;
 }
 
 fmatrix fmatrix_subtract(fmatrix matA, fmatrix matB, pool *frame) {
@@ -364,21 +385,11 @@ void print_fmatrix(fmatrix mat) {
 	int n = fmatrix_get_n(mat);
 	for (int i = 0; i < m; i++) {
 		for (int j = 0; j < n; j++) {
-			printf("%4.3f ", ATTEMPT_MATRIX_AT(mat, i, j));
+			printf("%4.3f ", MATRIX_AT(mat, i, j));
 		}
 		printf("\n");
 	}
 }
 
-void print_transpose(fmatrix mat) {
-	// null matrix has 0 dimension, so doesn't print
-	int m = fmatrix_get_m(mat);
-	int n = fmatrix_get_n(mat);
-	for (int i = 0; i < n; i++) {
-		for (int j = 0; j < m; j++) {
-			printf("%4.3f ", ATTEMPT_MATRIX_AT(mat, i, j));
-		}
-		printf("\n");
-	}
-}
+
 
