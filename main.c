@@ -109,8 +109,55 @@ void test_scale() {
 	
 }
 
+void test_multiplication() {
+	int count33 = 3;
+	int row33 = 3;
+	int col33 = 3;
+	int count31 = 4;
+	int row31 = 3;
+	int col31 = 1;
+
+	pool frame = create_pool(((count33 * row33 * col33) +
+							  (count31 * row31 * col31))*
+							   sizeof(float));
+
+	float matA[3][3] = {{1.0, 5.0, -3.0},
+						{-1.0, 0.0, 4.0},
+						{12.0, 5.0, -1.0}};
+	fmatrix A = create_fmatrix(row33, col33, matA, &frame);
+
+	float matB[3][3] = {{7.0, -2.0, 4.0},
+						{-1.0, -1.0, 3.0},
+						{1.0, 2.0, -3.0}};
+	fmatrix B = create_fmatrix(row33, col33, matB, &frame);
+
+	printf("A:\n");
+	print_fmatrix(A);
+
+	printf("\nB:\n");
+	print_fmatrix(B);
+
+	float vecx[3][1] = {{1.0},
+						{-2.0},
+						{4.0}};
+	fmatrix x = create_fmatrix(row31, col31, vecx, &frame);
+	printf("\nx: \n");
+	print_fmatrix(x);
+
+	printf("\nAx: \n");
+	print_fmatrix(fmatrix_multiply(A, x, &frame));
+
+	printf("\nx^t\n");
+	fmatrix_transpose_in(&x);
+	print_fmatrix(x);
+
+	printf("\nx * x^t: \n");
+	print_fmatrix(fmatrix_multiply(fmatrix_transpose(x, &frame), x, &frame));
+	
+}
+
 int main() {
-	switch(3){
+	switch(4){
 	case 1:
 		test_transpose();
 		break;
@@ -119,6 +166,9 @@ int main() {
 		break;
 	case 3:
 		test_scale();
+		break;
+	case 4:
+		test_multiplication();
 		break;
 	default:
 		printf("\nnice");

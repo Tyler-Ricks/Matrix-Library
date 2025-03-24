@@ -196,19 +196,21 @@ fmatrix fmatrix_multiply(fmatrix matA, fmatrix matB, pool *frame) {
 	}
 	// new matrix has row count of A and col count of B
 	int size = matA.m * matB.n;
-	float* result;
-	if ((result = (float*)raw_pool_alloc(frame, size * sizeof(float))) == NULL) {
-		printf("error while subtracting: \npool allocation failure\n");
+	float* matrix;
+	if ((matrix = (float*)raw_pool_alloc(frame, size * sizeof(float))) == NULL) {
+		printf("error while multiplying: \npool allocation failure\n");
 		return ERROR_FMATRIX;
 	}
 
+	fmatrix result = (fmatrix){ matA.m, matB.n, matrix};
+
 	for (int i = 0; i < matA.m; i++) {
 		for(int j = 0; j < matB.n; j++){
-			result[i * matB.n + j] = get_fmultiplied(matA, matB, i, j);
+			matrix[INDEX_AT(result, i, j)] = get_fmultiplied(matA, matB, i, j);
 		}
 	}
 
-	return (fmatrix){ matA.m, matB.n, result};
+	return result;
 }
 
 // Allowing in-place matrix multiplication for non square matrices could be possible, but I would
