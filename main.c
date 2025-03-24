@@ -110,7 +110,7 @@ void test_scale() {
 }
 
 void test_multiplication() {
-	int count33 = 2;
+	int count33 = 3;
 	int row33 = 3;
 	int col33 = 3;
 	int count31 = 4;
@@ -147,13 +147,23 @@ void test_multiplication() {
 	printf("\nAx: \n");
 	print_fmatrix(fmatrix_multiply(A, x, &frame));
 
-	printf("\nx^t\n");
+	/*printf("\nx^t\n");
 	fmatrix_transpose_in(&x);
 	print_fmatrix(x);
 
 	printf("\nx * x^t: \n");
-	print_fmatrix(fmatrix_multiply(fmatrix_transpose(x, &frame), x, &frame));
-	
+	fmatrix xn = fmatrix_transpose(x, &frame);
+	print_fmatrix(fmatrix_multiply(xn, x, &frame));
+	*/
+
+	printf("\nx^t\n");
+	fmatrix xtran = fmatrix_transpose(x, &frame);
+	//fmatrix_transpose_in(&x);
+	print_fmatrix(xtran);
+	printf("\nis transpose: %d\n", xtran.transpose);
+
+	printf("\nx * x^t: \n");
+	print_fmatrix(fmatrix_multiply(x, xtran, &frame));
 	print_pool(&frame);
 	free_pool(&frame);
 }
@@ -179,13 +189,15 @@ void test_pool() {
 	printf("\nwhere is ptr?: %d\n", (char*)frame.end - (char*)frame.ptr);
 
 	print_pool(&frame);
+
+	printf("x: %g, y: %g, z: %g\n", *x, *y, *z);
 	//printf("after : start = %p, ptr = %p, end = %p\n", frame.start, frame.ptr, frame.end);
 
 	free_pool(&frame);
 }
 
 int main() {
-	switch(4){
+	switch(5){
 	case 1:
 		test_transpose();
 		break;

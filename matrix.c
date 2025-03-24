@@ -181,6 +181,8 @@ float get_fmultiplied(fmatrix matA, fmatrix matB, int i, int j) {
 	float result = 0.0;
 
 	for (int a = 0; a < matA.n; a++) {
+		//printf("matA[%d][%d] = %g, matB[%d][%d] = %g\n", i, a, MATRIX_AT(matA, i, a), a, j, (MATRIX_AT(matB, a, j)));
+		//print_fmatrix(matB);
 		result += (MATRIX_AT(matA, i, a)) * (MATRIX_AT(matB, a, j));
 	}
 
@@ -195,9 +197,8 @@ fmatrix fmatrix_multiply(fmatrix matA, fmatrix matB, pool *frame) {
 		return ERROR_FMATRIX;
 	}
 	// new matrix has row count of A and col count of B
-	int size = matA.m * matB.n;
 	float* matrix;
-	if ((matrix = (float*)raw_pool_alloc(frame, size * sizeof(float))) == NULL) {
+	if ((matrix = (float*)raw_pool_alloc(frame, matA.m * matB.n * sizeof(float))) == NULL) {
 		printf("error while multiplying: \npool allocation failure\n");
 		return ERROR_FMATRIX;
 	}

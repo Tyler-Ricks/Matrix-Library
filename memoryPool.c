@@ -44,6 +44,14 @@ pool create_pool(int size) {
 // chunk of memory, then copy the original pool to the new one. Please just avoid realloc please
 //
 // This function also modifies frame, so keep that in mind
+// 
+// So this was a bad idea. Unless I find a way to make sure each pointer gets changed to match the new
+// reallocated pool, this is rather useless. 
+// solution idea: store an array of pointers to each memory location on the struct. when allocating memory
+// to a pool, the reference is instead an index to the array that stores the pointer to the data. When you
+// realloc, simply update all the pointers in the array somehow?
+//
+// Until this is fixed, pool_realloc is BANNED
 void* pool_realloc(pool* frame, int input_size) {
 	int old_size = ((char*)frame->end - (char*)frame->start);
 
@@ -115,7 +123,7 @@ void* pool_alloc(pool* frame, void* input, int size) {
 	// This is just a safety feature. Please preallocate enough memory for the pool and don't rely on this
 	if ((char*)bump < (char*)frame->start) { // bump steps past the start address of our frame
 		printf("palloc ran out of space in frame, reallocating\n");
-		//return(NULL);
+		return(NULL); // realloc is banned until further notice
 		check = pool_realloc(frame, size);
 		// realloc copies the frame and it's pointers to a totally different location, so bump must move too
 		bump = (char*) frame->ptr - size;
