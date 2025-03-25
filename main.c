@@ -110,7 +110,7 @@ void test_scale() {
 }
 
 void test_multiplication() {
-	int count33 = 3;
+	int count33 = 2;
 	int row33 = 3;
 	int col33 = 3;
 	int count31 = 4;
@@ -164,7 +164,7 @@ void test_multiplication() {
 
 	printf("\nx * x^t: \n");
 	print_fmatrix(fmatrix_multiply(x, xtran, &frame));
-	print_pool(&frame);
+	print_fpool(&frame);
 	free_pool(&frame);
 }
 
@@ -172,32 +172,35 @@ void test_pool() {
 	int size = 2;
 	pool frame = create_pool(2 * sizeof(float));
 
-	float* x = raw_pool_alloc(&frame, sizeof(float));
-	*x = 1.0;
-	float* y = raw_pool_alloc(&frame, sizeof(float));
+	float test = 1.0;
+	float* x = (float*) pool_alloc(&frame, &test, sizeof(float));
+	//float* x = (float*) raw_pool_alloc(&frame, sizeof(float));
+	printf("%g\n", *x);
+	float* y = (float*) raw_pool_alloc(&frame, sizeof(float));
 	*y = 2.0;
-	//printf("before : start = %p, ptr = %p, end = %p\n", frame.start, frame.ptr, frame.end);
+	printf("%g\n", *y);
+	printf("before : start = %p, ptr = %p, end = %p\n", frame.start, frame.ptr, frame.end);
 
-	print_pool(&frame);
+	print_fpool(&frame);
 	printf("\nsize of pool: %d\n", (char*)frame.end - (char*)frame.start);
-	printf("\nwhere is ptr?: %d\n", (char*)frame.end - (char*)frame.ptr);
+	printf("\nwhere is ptr?: %d\n", (char*)frame.ptr - (char*)frame.start);
 
 	float* z = raw_pool_alloc(&frame, sizeof(float));
 	*z = 3.0;
 
 	printf("\nsize of pool: %d\n", (char*)frame.end - (char*)frame.start);
-	printf("\nwhere is ptr?: %d\n", (char*)frame.end - (char*)frame.ptr);
+	printf("\nwhere is ptr?: %d\n", (char*)frame.ptr - (char*)frame.start);
 
-	print_pool(&frame);
+	print_fpool(&frame);
 
-	printf("x: %g, y: %g, z: %g\n", *x, *y, *z);
+	printf("\nx: %g, y: %g, z: %g\n", *x, *y, *z);
 	//printf("after : start = %p, ptr = %p, end = %p\n", frame.start, frame.ptr, frame.end);
 
 	free_pool(&frame);
 }
 
 int main() {
-	switch(5){
+	switch(4){
 	case 1:
 		test_transpose();
 		break;
