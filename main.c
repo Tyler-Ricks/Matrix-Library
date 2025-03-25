@@ -253,8 +253,34 @@ void test_row_swap() {
 	free_pool(&frame);
 }
 
+void test_row_sum() {
+	int count33 = 6;
+	int row33 = 3;
+	int col33 = 3;
+	pool frame = create_pool((count33 * row33 * col33) * sizeof(float));
+
+	float matA[3][3] = {{1.0, 5.0, -3.0},
+		{-1.0, 0.0, 4.0},
+		{12.0, 2.0, -1.0}};
+	fmatrix A = create_fmatrix(row33, col33, matA, &frame);
+
+	printf("A: \n");
+	print_fmatrix(A);
+
+	/*printf("\nA <- A^t: \n");
+	fmatrix_transpose_in(&A);
+	print_fmatrix(A);*/
+
+	printf("\nR1 <- 2R1 + 3R2\n");
+	//fmatrix_row_sum_in(A, 0, 2.0, 1, 3.0);
+	print_fmatrix(fmatrix_row_sum(A, 0, 2.0, 1, 3.0, &frame));
+	//print_fmatrix(A);
+
+	free_pool(&frame);
+}
+
 int main() {
-	switch(7){
+	switch(8){
 	case 1:
 		test_transpose();
 		break;
@@ -275,6 +301,9 @@ int main() {
 		break;
 	case 7:
 		test_row_swap();
+		break;
+	case 8:
+		test_row_sum();
 		break;
 	default:
 		printf("\no tests");

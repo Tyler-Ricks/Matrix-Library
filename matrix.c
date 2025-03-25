@@ -5,7 +5,7 @@
 //        2) reorganize functions
 //        3) add better comments for each function
 //        4) potentially add faster paths for non transpose matrices?
-
+//        5) column operations (easy to do with transpose)
 
 // allocates m by n blocks of memory of a given size in a pool
 fmatrix create_fmatrix(int m, int n, float* matrix, pool* frame) {
@@ -287,28 +287,6 @@ fmatrix fmatrix_row_scale(fmatrix mat, int row, float c, pool *frame) {
 	return result;
 }
 
-fmatrix fmatrix_row_swap(fmatrix mat, int row1, int row2, pool *frame) {
-	if (row1 >= mat.m || row1 < 0) {
-		printf("row_swap error: \nrow1 %d out of bounds (make sure you are 0-indexed)\n", row1);
-		return (fmatrix){ 0, 0, NULL};
-	}
-	if (row2 >= mat.m || row2 < 0) {
-		printf("row_swap error: \nrow2 %d out of bounds (make sure you are 0-indexed)\n", row2);
-		return (fmatrix){ 0, 0, NULL};
-	}
-
-	fmatrix result = fmatrix_copy_alloc(mat, frame);
-	if(!result.matrix){ return result; }
-	if(row1 == row2){ return result; } // no need to change anything
-
-	for (int i = 0; i < mat.n; i++) {
-		fswap(&result.matrix[INDEX_AT(mat, row1, i)], 
-			  &result.matrix[INDEX_AT(mat, row2, i)]);
-	}
-
-	return result;
-}
-
 void fmatrix_row_swap_in(fmatrix mat, int row1, int row2) {
 	if (row1 >= mat.m || row1 < 0) {
 		printf("row_swap error: \nrow1 %d out of bounds (make sure you are 0-indexed)\n", row1);
@@ -323,33 +301,22 @@ void fmatrix_row_swap_in(fmatrix mat, int row1, int row2) {
 
 	for (int i = 0; i < mat.n; i++) {
 		fswap(&mat.matrix[INDEX_AT(mat, row1, i)], 
-			  &mat.matrix[INDEX_AT(mat, row2, i)]);
+			&mat.matrix[INDEX_AT(mat, row2, i)]);
 	}
 }
 
-fmatrix fmatrix_row_sum(fmatrix mat, int dest, float c1, int src, float c2, pool* frame) {
-	if (dest >= mat.m || dest < 0) {
-		printf("row_sum error: \dest row %d out of bounds (make sure you are 0-indexed)\n", dest);
+fmatrix fmatrix_row_swap(fmatrix mat, int row1, int row2, pool *frame) {
+	if (row1 >= mat.m || row1 < 0) {
+		printf("row_swap error: \nrow1 %d out of bounds (make sure you are 0-indexed)\n", row1);
 		return (fmatrix){ 0, 0, NULL};
 	}
-	if (src >= mat.m || src < 0) {
-		printf("row_sum error: \src row %d out of bounds (make sure you are 0-indexed)\n", src);
+	if (row2 >= mat.m || row2 < 0) {
+		printf("row_swap error: \nrow2 %d out of bounds (make sure you are 0-indexed)\n", row2);
 		return (fmatrix){ 0, 0, NULL};
 	}
 
 	fmatrix result = fmatrix_copy_alloc(mat, frame);
-	if(!result.matrix){ return result; }
-
-	float value; // for avoiding redundant multiplying by 0
-	
-	for (int i = 0; i < mat.n; i++) { 
-		value = 0.0f;
-		if(c1 != 0){value += (c1 * MATRIX_AT(mat, dest, i));}
-		if(c2 != 0){value += (c2 * MATRIX_AT(mat, src,  i));}
-		// result[INDEX_AT(mat, dest, i)] = (c1 * (MATRIX_AT(mat, dest, i))) + (c2 * (MATRIX_AT(mat, src, i)));
-		result.matrix[INDEX_AT(mat, dest, i)] = value;
-	}
-
+	fmatrix_row_swap_in(result, row1, row2);
 	return result;
 }
 
@@ -373,6 +340,24 @@ void fmatrix_row_sum_in(fmatrix mat, int dest, float c1, int src, float c2) {
 		mat.matrix[INDEX_AT(mat, dest, i)] = value;
 	}
 }
+
+fmatrix fmatrix_row_sum(fmatrix mat, int dest, float c1, int src, float c2, pool* frame) {
+	if (dest >= mat.m || dest < 0) {
+		printf("row_sum error: \dest row %d out of bounds (make sure you are 0-indexed)\n", dest);
+		return (fmatrix){ 0, 0, NULL};
+	}
+	if (src >= mat.m || src < 0) {
+		printf("row_sum error: \src row %d out of bounds (make sure you are 0-indexed)\n", src);
+		return (fmatrix){ 0, 0, NULL};
+	}
+
+	fmatrix result = fmatrix_copy_alloc(mat, frame);
+	if(!result.matrix){ return result; }
+
+	fmatrix_row_sum_in(result, dest, c1, src, c2);
+	return result;
+}
+
 
 // Utilities
 
