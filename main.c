@@ -191,16 +191,20 @@ void test_pool() {
 	printf("\nsize of pool: %d\n", (char*)frame.end - (char*)frame.start);
 	printf("\nwhere is ptr?: %d\n", (char*)frame.ptr - (char*)frame.start);
 
+	// oh no
 	print_fpool(&frame);
 
-	printf("\nx: %g, y: %g, z: %g\n", *x, *y, *z);
+	float* m = raw_pool_alloc(&frame, sizeof(float));
+	*m = 7.0;
+
+	printf("\nx: %g, y: %g, z: %g, m: %g\n", *x, *y, *z, *m);
 	//printf("after : start = %p, ptr = %p, end = %p\n", frame.start, frame.ptr, frame.end);
 
 	free_pool(&frame);
 }
 
 int main() {
-	switch(4){
+	switch(5){
 	case 1:
 		test_transpose();
 		break;

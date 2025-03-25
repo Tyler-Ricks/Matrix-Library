@@ -1,9 +1,9 @@
 // Refactor checklist:
 // (done) 1) refactor the pool struct to initialize ptr to start instead of end
 // (done) 2) refactor pool_alloc and raw_pool_alloc
-//        3) refactor pool_realloc
-//		  4) change any bump downwards comments
-//		  5) make better comments in general
+// (done) 3) refactor pool_realloc
+// (done) 4) change any bump downwards comments
+// (done) 5) make better comments in general
 
 #include "memoryPool.h"
 
