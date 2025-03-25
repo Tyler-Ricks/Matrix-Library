@@ -67,6 +67,9 @@ typedef struct{
 
 fmatrix create_fmatrix(int m, int n, float* matrix, pool *frame);
 
+void print_fmatrix(fmatrix mat);
+void print_fpool(pool *frame);
+
 void print_properties(fmatrix mat);
 void print_as_array(fmatrix mat);
 fmatrix fmatrix_copy_alloc(fmatrix mat, pool *frame);
@@ -84,20 +87,17 @@ void fmatrix_scale_in(fmatrix mat, float c);
 fmatrix fmatrix_scale(fmatrix mat, float c, pool *frame);
 
 float get_fmultiplied(fmatrix matA, fmatrix matB, int i, int j);
-fmatrix fmatrix_multiply(fmatrix matA, fmatrix matB, pool *frame);
 void fmatrix_multiply_in(fmatrix matA, fmatrix matB);
+fmatrix fmatrix_multiply(fmatrix matA, fmatrix matB, pool *frame);
 
 void fmatrix_transpose_in(fmatrix *mat);
 fmatrix fmatrix_transpose(fmatrix mat, pool *frame);
 
-fmatrix fmatrix_row_scale(fmatrix mat, int row, float c, pool *frame);
 void fmatrix_row_scale_in(fmatrix mat, int row, float c);
-fmatrix fmatrix_row_swap(fmatrix mat, int row1, int row2, pool *frame);
+fmatrix fmatrix_row_scale(fmatrix mat, int row, float c, pool *frame);
 void fmatrix_row_swap_in(fmatrix mat, int row1, int row2);
-fmatrix fmatrix_row_sum(fmatrix mat, int dest, float c1, int src, float c2, pool *frame);
+fmatrix fmatrix_row_swap(fmatrix mat, int row1, int row2, pool *frame);
 void fmatrix_row_sum_in(fmatrix mat, int dest, float c1, int src, float c2);
-
-void print_fmatrix(fmatrix mat);
-void print_fpool(pool *frame);
+fmatrix fmatrix_row_sum(fmatrix mat, int dest, float c1, int src, float c2, pool *frame);
 
 #endif MATRIX_H

@@ -1,8 +1,8 @@
 #include "matrix.h"
 
 // Checklist:
-//        1) finish refactoring and testing for transpose reading
-//        2) reorganize functions
+// (done) 1) finish refactoring and testing for transpose reading
+// (done) 2) reorganize functions
 //        3) add better comments for each function
 //        4) potentially add faster paths for non transpose matrices?
 //        5) column operations (easy to do with transpose)
@@ -24,6 +24,30 @@ fmatrix create_fmatrix(int m, int n, float* matrix, pool* frame) {
 	}
 
 	return (fmatrix) {m, n, matrix};
+}
+
+// Utilities
+
+void print_fmatrix(fmatrix mat) {
+	// null matrix has 0 dimension, so doesn't print
+	int m = fmatrix_get_m(mat);
+	int n = fmatrix_get_n(mat);
+	for (int i = 0; i < m; i++) {
+		for (int j = 0; j < n; j++) {
+			printf("%4.3f ", MATRIX_AT(mat, i, j));
+		}
+		printf("\n");
+	}
+}
+
+// prints floats from a pool linearly
+// used for debugging weird memory things
+// printf("contents of frame:\n");
+// print_pool(&frame);
+void print_fpool(pool *frame) {
+	for (int i = 0; i < (float*)frame->ptr - (float*)frame->start; i++) {
+		printf("%g ", ((float*) frame->start)[i]);
+	}
 }
 
 void print_properties(fmatrix mat) {
@@ -155,6 +179,15 @@ fmatrix fmatrix_subtract(fmatrix matA, fmatrix matB, pool *frame) {
 	return result;
 }
 
+void fmatrix_scale_in(fmatrix mat, float c) {
+	if(c == 1.0) { return; }
+	int size = mat.m * mat.n;
+	if(c == 0.0) { memset(mat.matrix, 0, size); return; }
+
+	for(int i = 0; i < size; i++)
+		mat.matrix[i] *= c;
+}
+
 fmatrix fmatrix_scale(fmatrix mat, float c, pool *frame) {
 	float* matrix;
 	int size = mat.m * mat.n;
@@ -173,15 +206,6 @@ fmatrix fmatrix_scale(fmatrix mat, float c, pool *frame) {
 	return result;
 }
 
-void fmatrix_scale_in(fmatrix mat, float c) {
-	if(c == 1.0) { return; }
-	int size = mat.m * mat.n;
-	if(c == 0.0) { memset(mat.matrix, 0, size); return; }
-
-	for(int i = 0; i < size; i++)
-		mat.matrix[i] *= c;
-}
-
 // does the dot product of row i of matA by column j of matB
 float get_fmultiplied(fmatrix matA, fmatrix matB, int i, int j) {
 	float result = 0.0;
@@ -193,6 +217,19 @@ float get_fmultiplied(fmatrix matA, fmatrix matB, int i, int j) {
 	}
 
 	return result;
+}
+
+// Allowing in-place matrix multiplication for non square matrices could be possible, but I would
+// Have to refactor memoryPool pretty hard (reallocing space for a bigger matrix would either:
+//   - overrun other memory that's been allocated
+//   - have useless hanging memory if we move the new matrix elsewhere in the pool
+// There are definitely ways around this, but I'll get like nothing out of it, and lose nothing
+// from just doing it later.
+// Also uh i didn't think enough about in place multiplication. We still need the rows and columns
+// of A to be intact for straightforward matrix multiplication, but I could definitely see ways
+// to get around this. I'll do it later
+void fmatrix_multiply_in(fmatrix matA, fmatrix matB) {
+	return; 
 }
 
 // basic brute force matrix multiplication 
@@ -218,19 +255,6 @@ fmatrix fmatrix_multiply(fmatrix matA, fmatrix matB, pool *frame) {
 	}
 
 	return result;
-}
-
-// Allowing in-place matrix multiplication for non square matrices could be possible, but I would
-// Have to refactor memoryPool pretty hard (reallocing space for a bigger matrix would either:
-//   - overrun other memory that's been allocated
-//   - have useless hanging memory if we move the new matrix elsewhere in the pool
-// There are definitely ways around this, but I'll get like nothing out of it, and lose nothing
-// from just doing it later.
-// Also uh i didn't think enough about in place multiplication. We still need the rows and columns
-// of A to be intact for straightforward matrix multiplication, but I could definitely see ways
-// to get around this. I'll do it later
-void fmatrix_multiply_in(fmatrix matA, fmatrix matB) {
-	return; 
 }
 
 // SEE MATRIX.H COMMENT ABOUT TRANSPOSE
@@ -356,31 +380,6 @@ fmatrix fmatrix_row_sum(fmatrix mat, int dest, float c1, int src, float c2, pool
 
 	fmatrix_row_sum_in(result, dest, c1, src, c2);
 	return result;
-}
-
-
-// Utilities
-
-void print_fmatrix(fmatrix mat) {
-	// null matrix has 0 dimension, so doesn't print
-	int m = fmatrix_get_m(mat);
-	int n = fmatrix_get_n(mat);
-	for (int i = 0; i < m; i++) {
-		for (int j = 0; j < n; j++) {
-			printf("%4.3f ", MATRIX_AT(mat, i, j));
-		}
-		printf("\n");
-	}
-}
-
-// prints floats from a pool linearly
-// used for debugging weird memory things
-// printf("contents of frame:\n");
-// print_pool(&frame);
-void print_fpool(pool *frame) {
-	for (int i = 0; i < (float*)frame->ptr - (float*)frame->start; i++) {
-		printf("%g ", ((float*) frame->start)[i]);
-	}
 }
 
 
