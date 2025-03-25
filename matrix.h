@@ -98,5 +98,6 @@ fmatrix fmatrix_row_sum(fmatrix mat, int dest, float c1, int src, float c2, pool
 void fmatrix_row_sum_in(fmatrix mat, int dest, float c1, int src, float c2);
 
 void print_fmatrix(fmatrix mat);
+void print_fpool(pool *frame);
 
 #endif MATRIX_H

@@ -147,14 +147,24 @@ void test_multiplication() {
 	printf("\nAx: \n");
 	print_fmatrix(fmatrix_multiply(A, x, &frame));
 
-	printf("\nx^t\n");
+	/*printf("\nx^t\n");
 	fmatrix_transpose_in(&x);
 	print_fmatrix(x);
 
 	printf("\nx * x^t: \n");
-	print_fmatrix(fmatrix_multiply(fmatrix_transpose(x, &frame), x, &frame));
-	
-	print_pool(&frame);
+	fmatrix xn = fmatrix_transpose(x, &frame);
+	print_fmatrix(fmatrix_multiply(xn, x, &frame));
+	*/
+
+	printf("\nx^t\n");
+	fmatrix xtran = fmatrix_transpose(x, &frame);
+	//fmatrix_transpose_in(&x);
+	print_fmatrix(xtran);
+	printf("\nis transpose: %d\n", xtran.transpose);
+
+	printf("\nx * x^t: \n");
+	print_fmatrix(fmatrix_multiply(x, xtran, &frame));
+	print_fpool(&frame);
 	free_pool(&frame);
 }
 
@@ -162,23 +172,28 @@ void test_pool() {
 	int size = 2;
 	pool frame = create_pool(2 * sizeof(float));
 
-	float* x = raw_pool_alloc(&frame, sizeof(float));
-	*x = 1.0;
-	float* y = raw_pool_alloc(&frame, sizeof(float));
+	float test = 1.0;
+	float* x = (float*) pool_alloc(&frame, &test, sizeof(float));
+	//float* x = (float*) raw_pool_alloc(&frame, sizeof(float));
+	printf("%g\n", *x);
+	float* y = (float*) raw_pool_alloc(&frame, sizeof(float));
 	*y = 2.0;
-	//printf("before : start = %p, ptr = %p, end = %p\n", frame.start, frame.ptr, frame.end);
+	printf("%g\n", *y);
+	printf("before : start = %p, ptr = %p, end = %p\n", frame.start, frame.ptr, frame.end);
 
-	print_pool(&frame);
+	print_fpool(&frame);
 	printf("\nsize of pool: %d\n", (char*)frame.end - (char*)frame.start);
-	printf("\nwhere is ptr?: %d\n", (char*)frame.end - (char*)frame.ptr);
+	printf("\nwhere is ptr?: %d\n", (char*)frame.ptr - (char*)frame.start);
 
 	float* z = raw_pool_alloc(&frame, sizeof(float));
 	*z = 3.0;
 
 	printf("\nsize of pool: %d\n", (char*)frame.end - (char*)frame.start);
-	printf("\nwhere is ptr?: %d\n", (char*)frame.end - (char*)frame.ptr);
+	printf("\nwhere is ptr?: %d\n", (char*)frame.ptr - (char*)frame.start);
 
-	print_pool(&frame);
+	print_fpool(&frame);
+
+	printf("\nx: %g, y: %g, z: %g\n", *x, *y, *z);
 	//printf("after : start = %p, ptr = %p, end = %p\n", frame.start, frame.ptr, frame.end);
 
 	free_pool(&frame);

@@ -181,6 +181,8 @@ float get_fmultiplied(fmatrix matA, fmatrix matB, int i, int j) {
 	float result = 0.0;
 
 	for (int a = 0; a < matA.n; a++) {
+		//printf("matA[%d][%d] = %g, matB[%d][%d] = %g\n", i, a, MATRIX_AT(matA, i, a), a, j, (MATRIX_AT(matB, a, j)));
+		//print_fmatrix(matB);
 		result += (MATRIX_AT(matA, i, a)) * (MATRIX_AT(matB, a, j));
 	}
 
@@ -195,9 +197,8 @@ fmatrix fmatrix_multiply(fmatrix matA, fmatrix matB, pool *frame) {
 		return ERROR_FMATRIX;
 	}
 	// new matrix has row count of A and col count of B
-	int size = matA.m * matB.n;
 	float* matrix;
-	if ((matrix = (float*)raw_pool_alloc(frame, size * sizeof(float))) == NULL) {
+	if ((matrix = (float*)raw_pool_alloc(frame, matA.m * matB.n * sizeof(float))) == NULL) {
 		printf("error while multiplying: \npool allocation failure\n");
 		return ERROR_FMATRIX;
 	}
@@ -259,6 +260,18 @@ fmatrix fmatrix_transpose(fmatrix mat, pool* frame) {
 // Elementary row operations
 
 // Row should be 0-indexed
+void fmatrix_row_scale_in(fmatrix mat, int row, float c) {
+	if (row >= mat.m || row < 0) {
+		printf("row_scale error: \nrow %d out of bounds (make sure you are 0-indexed)\n", row);
+		return;
+	}
+	if (c == 1.0) { return; }
+	if (c == 0.0) { memset(&mat.matrix[INDEX_AT(mat, row, 0)], 0, mat.n * sizeof(float)); return; }
+
+	for (int i = 0; i < mat.n; i++) 
+		mat.matrix[INDEX_AT(mat, row, i)] *= c;
+}
+
 fmatrix fmatrix_row_scale(fmatrix mat, int row, float c, pool *frame) {
 	if (row >= mat.m || row < 0) {
 		printf("row_scale error: \nrow %d out of bounds (make sure you are 0-indexed)\n", row);
@@ -280,18 +293,6 @@ fmatrix fmatrix_row_scale(fmatrix mat, int row, float c, pool *frame) {
 	}
 
 	return result;
-}
-
-void fmatrix_row_scale_in(fmatrix mat, int row, float c) {
-	if (row >= mat.m || row < 0) {
-		printf("row_scale error: \nrow %d out of bounds (make sure you are 0-indexed)\n", row);
-		return;
-	}
-	if (c == 1.0) { return; }
-	if (c == 0.0) { memset(&mat.matrix[INDEX_AT(mat, row, 0)], 0, mat.n * sizeof(float)); return; }
-
-	for (int i = 0; i < mat.n; i++) 
-		mat.matrix[INDEX_AT(mat, row, i)] *= c;
 }
 
 fmatrix fmatrix_row_swap(fmatrix mat, int row1, int row2, pool *frame) {
@@ -392,6 +393,16 @@ void print_fmatrix(fmatrix mat) {
 			printf("%4.3f ", MATRIX_AT(mat, i, j));
 		}
 		printf("\n");
+	}
+}
+
+// prints floats from a pool linearly
+// used for debugging weird memory things
+// printf("contents of frame:\n");
+// print_pool(&frame);
+void print_fpool(pool *frame) {
+	for (int i = 0; i < (float*)frame->ptr - (float*)frame->start; i++) {
+		printf("%g ", ((float*) frame->start)[i]);
 	}
 }
 
