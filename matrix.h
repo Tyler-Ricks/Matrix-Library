@@ -78,10 +78,10 @@ void intswap(int *a, int *b);
 
 void fmatrix_add_in(fmatrix matA, fmatrix matB);
 fmatrix fmatrix_add(fmatrix matA, fmatrix matB, pool *frame);
-fmatrix fmatrix_subtract(fmatrix matA, fmatrix matB, pool *frame);
 void fmatrix_subtract_in(fmatrix matA, fmatrix matB);
-fmatrix fmatrix_scale(fmatrix mat, float c, pool *frame);
+fmatrix fmatrix_subtract(fmatrix matA, fmatrix matB, pool *frame);
 void fmatrix_scale_in(fmatrix mat, float c);
+fmatrix fmatrix_scale(fmatrix mat, float c, pool *frame);
 
 float get_fmultiplied(fmatrix matA, fmatrix matB, int i, int j);
 fmatrix fmatrix_multiply(fmatrix matA, fmatrix matB, pool *frame);

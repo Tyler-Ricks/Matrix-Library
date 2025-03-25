@@ -203,8 +203,33 @@ void test_pool() {
 	free_pool(&frame);
 }
 
+void test_row_operations() {
+	int count33 = 6;
+	int row33 = 3;
+	int col33 = 3;
+	pool frame = create_pool((count33 * row33 * col33) * sizeof(float));
+
+	float matA[3][3] = {{1.0, 5.0, -3.0},
+						{-1.0, 0.0, 4.0},
+						{12.0, 5.0, -1.0}};
+	fmatrix A = create_fmatrix(row33, col33, matA, &frame);
+
+	printf("A: \n");
+	print_fmatrix(A);
+
+	printf("\nA <- A^t: \n");
+	fmatrix_transpose_in(&A);
+	print_fmatrix(A);
+
+	printf("\nR1 <- 1R1\n");
+	fmatrix_row_scale_in(A, 0, 0.0);
+	print_fmatrix(A);
+
+	free_pool(&frame);
+}
+
 int main() {
-	switch(5){
+	switch(6){
 	case 1:
 		test_transpose();
 		break;
@@ -219,6 +244,9 @@ int main() {
 		break;
 	case 5:
 		test_pool();
+		break;
+	case 6:
+		test_row_operations();
 		break;
 	default:
 		printf("\no tests");

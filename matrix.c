@@ -1,5 +1,12 @@
 #include "matrix.h"
 
+// Checklist:
+//        1) finish refactoring and testing for transpose reading
+//        2) reorganize functions
+//        3) add better comments for each function
+//        4) potentially add faster paths for non transpose matrices?
+
+
 // allocates m by n blocks of memory of a given size in a pool
 fmatrix create_fmatrix(int m, int n, float* matrix, pool* frame) {
 	if (m < 0 || n < 0) {
@@ -65,7 +72,6 @@ void fswap(float *a, float *b) {
 	*a = *b;
 	*b = temp;
 }
-
 void intswap(int* a, int* b) {
 	*a ^= *b;
 	*b ^= *a;
@@ -112,6 +118,19 @@ fmatrix fmatrix_add(fmatrix matA, fmatrix matB, pool *frame) {
 	return result;
 }
 
+void fmatrix_subtract_in(fmatrix matA, fmatrix matB) {
+	if (matA.m != matB.m || matA.n != matB.n) {
+		printf("error while adding: \ndimension mismatch: ");
+		printf("matrix a: (%d x %d)  matrix b: (%d x %d)\n", matA.m, matA.n, matB.m, matB.n);
+		return;
+	}
+	for(int i = 0; i < matB.m; i++){
+		for (int j = 0; j < matA.n; j++) {
+			matA.matrix[INDEX_AT(matA, i, j)] -= matB.matrix[INDEX_AT(matB, i, j)];
+		}
+	}
+}
+
 fmatrix fmatrix_subtract(fmatrix matA, fmatrix matB, pool *frame) {
 	if (matA.m != matB.m || matA.n != matB.n) {
 		printf("error while subtracting: \ndimension mismatch: ");
@@ -134,19 +153,6 @@ fmatrix fmatrix_subtract(fmatrix matA, fmatrix matB, pool *frame) {
 	}
 
 	return result;
-}
-
-void fmatrix_subtract_in(fmatrix matA, fmatrix matB) {
-	if (matA.m != matB.m || matA.n != matB.n) {
-		printf("error while adding: \ndimension mismatch: ");
-		printf("matrix a: (%d x %d)  matrix b: (%d x %d)\n", matA.m, matA.n, matB.m, matB.n);
-		return;
-	}
-	for(int i = 0; i < matB.m; i++){
-		for (int j = 0; j < matA.n; j++) {
-			matA.matrix[INDEX_AT(matA, i, j)] -= matB.matrix[INDEX_AT(matB, i, j)];
-		}
-	}
 }
 
 fmatrix fmatrix_scale(fmatrix mat, float c, pool *frame) {
@@ -220,7 +226,6 @@ fmatrix fmatrix_multiply(fmatrix matA, fmatrix matB, pool *frame) {
 //   - have useless hanging memory if we move the new matrix elsewhere in the pool
 // There are definitely ways around this, but I'll get like nothing out of it, and lose nothing
 // from just doing it later.
-
 // Also uh i didn't think enough about in place multiplication. We still need the rows and columns
 // of A to be intact for straightforward matrix multiplication, but I could definitely see ways
 // to get around this. I'll do it later
@@ -229,10 +234,6 @@ void fmatrix_multiply_in(fmatrix matA, fmatrix matB) {
 }
 
 // SEE MATRIX.H COMMENT ABOUT TRANSPOSE
-// gonna enforce square matrices for this too. Doing in-place trnaspose is more feasible
-// than in-place multiplication because the amount of memory on the pool doesn't change,
-// But the algorithm for this will take me more time to work out.
-
 // Maybe look at this too https://www.geeksforgeeks.org/inplace-m-x-n-size-matrix-transpose/
 void fmatrix_transpose_in(fmatrix *mat) {
 	/*if (mat.m != mat.n) {
@@ -266,7 +267,10 @@ void fmatrix_row_scale_in(fmatrix mat, int row, float c) {
 		return;
 	}
 	if (c == 1.0) { return; }
-	if (c == 0.0) { memset(&mat.matrix[INDEX_AT(mat, row, 0)], 0, mat.n * sizeof(float)); return; }
+	if (c == 0.0 && !mat.transpose) { 
+		memset(&mat.matrix[INDEX_AT(mat, row, 0)], 0, mat.n * sizeof(float)); 
+		return; 
+	}
 
 	for (int i = 0; i < mat.n; i++) 
 		mat.matrix[INDEX_AT(mat, row, i)] *= c;
@@ -279,19 +283,7 @@ fmatrix fmatrix_row_scale(fmatrix mat, int row, float c, pool *frame) {
 	}
 
 	fmatrix result = fmatrix_copy_alloc(mat, frame);
-	if (!result.matrix) { return result; }
-
-	if (c == 0.0) {
-		memset(result.matrix + (row * result.n), 0, result.n * sizeof(float));
-		return result;
-	}
-
-	if (c == 1.0) { return result; }
-
-	for (int i = 0; i < mat.n; i++) {
-		result.matrix[INDEX_AT(result, row, i)] *= c;
-	}
-
+	fmatrix_row_scale_in(result, row, c);
 	return result;
 }
 
