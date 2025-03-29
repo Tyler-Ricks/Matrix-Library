@@ -100,4 +100,11 @@ fmatrix fmatrix_row_swap(fmatrix mat, int row1, int row2, pool *frame);
 void fmatrix_row_sum_in(fmatrix mat, int dest, float c1, int src, float c2);
 fmatrix fmatrix_row_sum(fmatrix mat, int dest, float c1, int src, float c2, pool *frame);
 
+void fmatrix_col_scale_in(fmatrix mat, int col, float c);
+fmatrix fmatrix_col_scale(fmatrix mat, int col, float c, pool *frame);
+void fmatrix_col_swap_in(fmatrix mat, int col1, int col2);
+fmatrix fmatrix_col_swap(fmatrix mat, int col1, int col2, pool *frame);
+void fmatrix_col_sum_in(fmatrix mat, int dest, float c1, int src, float c2);
+fmatrix fmatrix_col_sum(fmatrix mat, int dest, float c1, int src, float c2, pool *frame);
+
 #endif MATRIX_H

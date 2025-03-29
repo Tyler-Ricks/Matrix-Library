@@ -350,6 +350,8 @@ fmatrix fmatrix_row_scale(fmatrix mat, int row, float c, pool *frame) {
 	}
 
 	fmatrix result = fmatrix_copy_alloc(mat, frame);
+	if(!result.matrix){return result;}
+
 	fmatrix_row_scale_in(result, row, c);
 	return result;
 }
@@ -371,7 +373,7 @@ void fmatrix_row_swap_in(fmatrix mat, int row1, int row2) {
 
 	for (int i = 0; i < mat.n; i++) {
 		fswap(&mat.matrix[INDEX_AT(mat, row1, i)], 
-			&mat.matrix[INDEX_AT(mat, row2, i)]);
+			  &mat.matrix[INDEX_AT(mat, row2, i)]);
 	}
 }
 
@@ -387,6 +389,8 @@ fmatrix fmatrix_row_swap(fmatrix mat, int row1, int row2, pool *frame) {
 	}
 
 	fmatrix result = fmatrix_copy_alloc(mat, frame);
+	if(!result.matrix){return result;}
+
 	fmatrix_row_swap_in(result, row1, row2);
 	return result;
 }
@@ -434,4 +438,98 @@ fmatrix fmatrix_row_sum(fmatrix mat, int dest, float c1, int src, float c2, pool
 }
 
 
+// elementary column operations
+// This are all the "easy" methods. They transpose the input matrix, then run their respective row operation on
+// it, then transpose it back. I'll implement direct methods later, but I wanted to demonstrate how efficient 
+// transpose could be
 
+// scales elements of a column by a factor of c
+void fmatrix_col_scale_in(fmatrix mat, int col, float c) {
+	if (col >= mat.n || col < 0) {
+		printf("col_scale error: \ncol %d out of bounds (make sure you are 0-indexed)\n", col);
+		return;
+	}
+
+	fmatrix_transpose_in(&mat);
+	fmatrix_row_scale_in(mat, col, c);
+	fmatrix_transpose_in(&mat);
+}
+
+fmatrix fmatrix_col_scale(fmatrix mat, int col, float c, pool* frame) {
+	if (col >= mat.n || col < 0) {
+		printf("col_scale error: \ncol %d out of bounds (make sure you are 0-indexed)\n", col);
+		return ERROR_FMATRIX;
+	}
+
+	fmatrix result = fmatrix_copy_alloc(mat, frame);
+	if(!result.matrix){ return result; }
+
+	fmatrix_col_scale_in(mat, col, c);
+	return result;
+}
+
+void fmatrix_col_swap_in(fmatrix mat, int col1, int col2) {
+	if (col1 >= mat.m || col1 < 0) {
+		printf("col_swap error: \ncol1 %d out of bounds (make sure you are 0-indexed)\n", col1);
+		return;
+	}
+	if (col2 >= mat.m || col2 < 0) {
+		printf("col_swap error: \ncol2 %d out of bounds (make sure you are 0-indexed)\n", col2);
+		return;
+	}
+
+	if(col1 == col2){ return; } // no change necessary
+
+	fmatrix_transpose_in(&mat);
+	fmatrix_row_swap_in(mat, col1, col2);
+	fmatrix_transpose_in(&mat);
+}
+
+fmatrix fmatrix_col_swap(fmatrix mat, int col1, int col2, pool* frame) {
+	if (col1 >= mat.m || col1 < 0) {
+		printf("col_swap error: \ncol1 %d out of bounds (make sure you are 0-indexed)\n", col1);
+		return;
+	}
+	if (col2 >= mat.m || col2 < 0) {
+		printf("col_swap error: \ncol2 %d out of bounds (make sure you are 0-indexed)\n", col2);
+		return;
+	}
+
+	fmatrix result = fmatrix_copy_alloc(mat, frame);
+	if(!result.matrix){ return result; }
+
+	fmatrix_col_swap_in(mat, col1, col2);
+	return result;
+}
+
+void fmatrix_col_sum_in(fmatrix mat, int dest, float c1, int src, float c2) {
+	if (dest >= mat.m || dest < 0) {
+		printf("col_sum error: \dest col %d out of bounds (make sure you are 0-indexed)\n", dest);
+		return;
+	}
+	if (src >= mat.m || src < 0) {
+		printf("col_sum error: \src col %d out of bounds (make sure you are 0-indexed)\n", src);
+		return;
+	}
+
+	fmatrix_transpose_in(&mat);
+	fmatrix_row_sum_in(mat, dest, c1, src, c2);
+	fmatrix_transpose_in(&mat);
+}
+
+fmatrix fmatrix_col_sum(fmatrix mat, int dest, float c1, int src, float c2, pool *frame) {
+	if (dest >= mat.m || dest < 0) {
+		printf("col_sum error: \dest col %d out of bounds (make sure you are 0-indexed)\n", dest);
+		return;
+	}
+	if (src >= mat.m || src < 0) {
+		printf("col_sum error: \src col %d out of bounds (make sure you are 0-indexed)\n", src);
+		return;
+	}
+
+	fmatrix result = fmatrix_copy_alloc(mat, frame);
+	if(!result.matrix){ return result;}
+
+	fmatrix_col_sum_in(result, dest, c1, src, c2);
+	return result;
+}
