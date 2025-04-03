@@ -19,13 +19,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="main.c" />
     <ClCompile Include="matrix.c" />
     <ClCompile Include="memoryPool.c" />
+    <ClCompile Include="testing.c" />
     <ClCompile Include="vector.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="matrix.h" />
     <ClInclude Include="memoryPool.h" />
+    <ClInclude Include="testing.h" />
     <ClInclude Include="vector.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

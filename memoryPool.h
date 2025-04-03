@@ -31,6 +31,6 @@ void* pool_realloc(pool* frame, int input_size);
 void* pool_alloc(pool* frame, void* input, int size);
 void* raw_pool_alloc(pool* frame, int size);
 
-void free_pool(pool*);
+void free_pool(pool *frame);
 
 #endif
