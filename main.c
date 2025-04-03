@@ -9,7 +9,10 @@ void test_transpose() {
 	float matrixa[3][4] = {{1.5, 2.5, 3.5, 5},
 						   {4.0, 5.0, 6.0, 5}, 
 						   {7.0, 8.0, 9.0, 5}};
-	fmatrix A = create_fmatrix(rows, cols, matrixa, &frame);
+	/*float matrixa[12] = {1.5, 2.5, 3.5, 5,
+						 4.0, 5.0, 6.0, 5, 
+						 7.0, 8.0, 9.0, 5};*/
+	fmatrix A = create_fmatrix(rows, cols, matrixa[0], &frame);
 	printf("A:\n");
 	print_fmatrix(A);
 
@@ -38,8 +41,8 @@ void test_add() {
 							  sizeof(float));
 
 	float matrixa[3][4] = {{1.5, 2.5, 3.5, 5},
-		{4.0, 5.0, 6.0, 5}, 
-		{7.0, 8.0, 9.0, 5}};
+						   {4.0, 5.0, 6.0, 5}, 
+						   {7.0, 8.0, 9.0, 5}};
 	fmatrix A = create_fmatrix(rows34, cols34, matrixa, &frame);
 	printf("A:\n");
 	print_fmatrix(A);
@@ -182,14 +185,14 @@ void test_pool() {
 	printf("before : start = %p, ptr = %p, end = %p\n", frame.start, frame.ptr, frame.end);
 
 	print_fpool(&frame);
-	printf("\nsize of pool: %d\n", (char*)frame.end - (char*)frame.start);
-	printf("\nwhere is ptr?: %d\n", (char*)frame.ptr - (char*)frame.start);
+	printf("\nsize of pool: %lld\n", (char*)frame.end - (char*)frame.start);
+	printf("\nwhere is ptr?: %lld\n", (char*)frame.ptr - (char*)frame.start);
 
 	float* z = raw_pool_alloc(&frame, sizeof(float));
 	*z = 3.0;
 
-	printf("\nsize of pool: %d\n", (char*)frame.end - (char*)frame.start);
-	printf("\nwhere is ptr?: %d\n", (char*)frame.ptr - (char*)frame.start);
+	printf("\nsize of pool: %lld\n", (char*)frame.end - (char*)frame.start);
+	printf("\nwhere is ptr?: %lld\n", (char*)frame.ptr - (char*)frame.start);
 
 	// oh no
 	print_fpool(&frame);
@@ -305,7 +308,7 @@ void test_col_scale() {
 }
 
 int main() {
-	switch(9){
+	switch(1){
 	case 1:
 		test_transpose();
 		break;
@@ -338,43 +341,4 @@ int main() {
 	}
 
 	printf("\ndone");
-	/*int rows = 3;
-	int columns = 3;
-	// allocate a memory pool for allocated matrices
-	pool frame = create_pool((rows * columns + 3 * 1 + 100) * sizeof(float));
-
-	float matrixa[3][3] = {{1.0, 2.0, 3.0}, 
-						   {4.0, 5.0, 6.0}, 
-						   {7.0, 8.0, 9.0}};
-	fmatrix A = create_fmatrix(rows, columns, matrixa, &frame);
-	//print_matrix(wow);
-
-	printf("%d", A.transpose);
-	fmatrix_transpose_in(&A);
-	printf("%d", A.transpose);*/
-
-
-	/*float matrixb[3][4] = {{1.5, 2.5, 3.5, 5},
-		{4.0, 5.0, 6.0, 5}, 
-		{7.0, 8.0, 9.0, 5}};
-	fmatrix B = create_fmatrix(3, 4, matrixb, &frame);
-
-	printf("A:\n");
-	print_fmatrix(A);
-
-	printf("\nB:\n");
-	print_fmatrix(B);
-
-	printf("\ntranspose of B\n");
-	//print_transpose(B);
-	printf("\nbefore: m = %d, n = %d\n", B.m, B.n);
-	fmatrix_transpose_in(&B);
-	//print_transpose(B);
-	printf("\nafter: m = %d, n = %d\n", B.m, B.n);
-	print_fmatrix(B);
-
-	printf("\n B[1][1] = %g", ATTEMPT_MATRIX_AT(B, 1, 1));
-
-	// free the memory pool after its use
-	free_pool(&frame);*/
 }

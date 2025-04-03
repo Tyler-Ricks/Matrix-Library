@@ -6,6 +6,7 @@
 // (done) 3) add better comments for each function
 //        4) potentially add faster paths for non transpose matrices?
 //        5) column operations (easy to do with transpose)
+//        6) Look into sub expression overflow messages. Are they worth fixing? I think so
 
 // allocates m by n blocks of memory of a given size in a pool, returns a struct with a pointer to it,
 // the dimensions of the matrix, and if it is a transpose or not.
