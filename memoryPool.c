@@ -29,6 +29,12 @@ void* ptr;
 }pool;
 */
 
+// Chceks if place is inside frame's bounds, returns false if not
+// Used for pool_free_from, but may refactor pool_alloc with it to make it cleaner
+int is_in_pool(pool frame, void* place) {
+	return ((char*)frame.start <= (char*)place) && ((char*)frame.end >= (char*)place);
+}
+
 // Allocates size bytes, and returns a pool struct of pointers to memory's start, end, and current levels
 //   - ptr indicates the current level, and is initialized to the first space in memory
 //   - if it fails, it returns a pool with all members set to NULL
@@ -69,51 +75,6 @@ void* pool_realloc(pool* frame, int input_size) {
 
 	// note: the last two if statements are not enough to cover the case where input size would cause the pool cap to
 	// be exceeded, but that possibility is handled earlier in the function
-
-	// RIP old method
-	/*
-	//return realloc(frame->start, size);
-	void* start;
-	if ((start = malloc(new_size)) == NULL) {
-		printf("realloc failed, returning NULL\n");
-		return NULL;
-	}
-
-	// documentation for how I found memcpy params
-	// oh dear god (this is brute force implementation based on diagramming it
-	// memcpy((uintptr_t) start + (new_size - old_size) + ((uintptr_t) frame->ptr - (uintptr_t) frame->start), frame->ptr, (uintptr_t) frame->end - (uintptr_t) frame->ptr);
-	// First parameter is where to allocate: 
-	// start of new frame +    change in size     +    space to current ptr
-	//        start       + (new_size - old_size) + (frame->ptr - frame->start)
-	// this can be broken down further. 
-	// old_size = frame->end - frame->start, so when you sub this in, you can cancel terms:
-	// start + new_size - frame->end + frame->ptr
-	// 
-	// The second parameter is simple enough, we are copying from frame->ptr (already allocated data)
-	//
-	// The third paramter is the size of what we are copying, which is simple enough too
-	// (it's literally just the distance between frame->end and frame->ptr):
-	// pool->end - pool->ptr
-	//
-	// This operation shows up in the first parameter as well, if we just factor out a negative
-	// So, we store this size in variable allocated, and use it in both parameters
-	// Much cleaner
-	
-
-	// better implementation does some math
-	int allocated = (char*) frame->end - (char*) frame->ptr;
-	// top of new chunk - already allocated stuff is an intuitive way to find where to start copying from
-	memcpy((char*) start + new_size - allocated, frame->ptr, allocated);
-
-	free(frame->start);
-
-	frame->start = start;
-	frame->end = (char*)start + new_size;
-	frame->ptr = (char*)frame->end - allocated;
-
-	// returns a pointer to the start, for usage in palloc
-	return frame->start;
-	*/
 	void* check;
 	if ((check = realloc(frame->start, new_size)) == NULL) {
 		printf("realloc failed, returning NULL\n");
@@ -194,6 +155,17 @@ void* raw_pool_alloc(pool* frame, int size) {
 	// Return pointer to the start of what we just allocated
 	// We bump allocate downwards, so the address to the allocated memory is just bump 
 	return result;
+}
+
+
+// frees memory in frame after pointer start
+// Literally just moves frame->ptr to *start
+// returns NULL if start is not in frame's range
+// Used for some operations that want to operate on a duplicate of an input, but not store that duplicate 
+// for later (ex determinant by triangulation wants to not modify the input matrix, but have a matrix to 
+// do row operations on, so it duplicates input, then gets its determinant, then frees it with this
+void* pool_free_from(pool* frame, void* start) {
+	return is_in_pool(*frame, start) ? frame->ptr = start : printf("pool_free_from failed: input pointer not in frame!\n"); return NULL;
 }
 
 

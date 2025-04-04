@@ -175,33 +175,16 @@ void test_pool() {
 	int size = 2;
 	pool frame = create_pool(2 * sizeof(float));
 
-	float test = 1.0;
-	float* x = (float*) pool_alloc(&frame, &test, sizeof(float));
-	//float* x = (float*) raw_pool_alloc(&frame, sizeof(float));
-	printf("%g\n", *x);
-	float* y = (float*) raw_pool_alloc(&frame, sizeof(float));
-	*y = 2.0;
-	printf("%g\n", *y);
-	printf("before : start = %p, ptr = %p, end = %p\n", frame.start, frame.ptr, frame.end);
+	void* tp = frame.start;
+	printf("start: %p\n end: %p\n", frame.start, frame.end);
 
-	print_fpool(&frame);
-	printf("\nsize of pool: %lld\n", (char*)frame.end - (char*)frame.start);
-	printf("\nwhere is ptr?: %lld\n", (char*)frame.ptr - (char*)frame.start);
+	float* ap = raw_pool_alloc(&frame, sizeof(float));
+	float* bp = raw_pool_alloc(&frame, sizeof(float));
+	printf("frame.ptr before: %p\n", frame.ptr);
 
-	float* z = raw_pool_alloc(&frame, sizeof(float));
-	*z = 3.0;
+	pool_free_from(&frame, bp);
 
-	printf("\nsize of pool: %lld\n", (char*)frame.end - (char*)frame.start);
-	printf("\nwhere is ptr?: %lld\n", (char*)frame.ptr - (char*)frame.start);
-
-	// oh no
-	print_fpool(&frame);
-
-	float* m = raw_pool_alloc(&frame, sizeof(float));
-	*m = 7.0;
-
-	printf("\nx: %g, y: %g, z: %g, m: %g\n", *x, *y, *z, *m);
-	//printf("after : start = %p, ptr = %p, end = %p\n", frame.start, frame.ptr, frame.end);
+	printf("frame.ptr after: %p\n", frame.ptr);
 
 	free_pool(&frame);
 }
@@ -307,8 +290,27 @@ void test_col_scale() {
 	free_pool(&frame);
 }
 
+void test_determinant() {
+	int row33 = 3;
+	int col33 = 3;
+	int count33 = 1;
+
+	float matrixa[3][3] = {{1.0, 7.0, 0.3},
+						   {3.0, -2.0, 1.0},
+						   {2.5, -3.0, -4.0}};
+
+	pool frame = create_pool(row33 * col33 * count33 * sizeof(float));
+	
+	fmatrix A = create_fmatrix(row33, col33, matrixa, &frame);
+
+	printf("A: \n");
+	print_fmatrix(A);
+
+	printf("\n|A| = %g", fmatrix_determinant(A));
+}
+
 int main() {
-	switch(1){
+	switch(5){
 	case 1:
 		test_transpose();
 		break;
@@ -335,6 +337,9 @@ int main() {
 		break;
 	case 9:
 		test_col_scale();
+		break;
+	case 10:
+		test_determinant();
 		break;
 	default:
 		printf("\no tests");

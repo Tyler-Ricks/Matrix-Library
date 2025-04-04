@@ -107,4 +107,7 @@ fmatrix fmatrix_col_swap(fmatrix mat, int col1, int col2, pool *frame);
 void fmatrix_col_sum_in(fmatrix mat, int dest, float c1, int src, float c2);
 fmatrix fmatrix_col_sum(fmatrix mat, int dest, float c1, int src, float c2, pool *frame);
 
+float fmatrix_determinant(fmatrix mat);
+float fmatrix_cofactor_expansion(fmatrix mat, int lr, int lc, int ur, int uc);
+
 #endif MATRIX_H

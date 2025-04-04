@@ -534,3 +534,40 @@ fmatrix fmatrix_col_sum(fmatrix mat, int dest, float c1, int src, float c2, pool
 	fmatrix_col_sum_in(result, dest, c1, src, c2);
 	return result;
 }
+
+
+// Determinants
+// This is probably the second place where I can really hone down and optimize. For now, I'll just do basic
+// cofactor expansion because it is recursive and that's cool
+
+// checks if mat is non square, then calls fatrix_det (which recursively finds the determinant)
+
+float fmatrix_determinant(fmatrix mat) {
+	if (mat.m != mat.n) {
+		printf("The determinant for a non square matrix (%d x %d) does not exist\n", mat.m, mat.n);
+		exit(0); // okay do something else instead 
+	}
+
+	return fmatrix_cofactor_expansion(mat, 0, 0, mat.m - 1, mat.n - 1);
+}
+
+
+// takes a matrix, its upper and low row index, and its upper and lower column index. These indices bound the matrix we are finidng
+// the determinant of. (inclusive) This behaves similarly to how cofactor expansion works normally. 
+// Just like in cofactor expansion, we choose a row or column, then multiply each element of it with the
+// determinant of the minor leftover after excluding that index row and column. Then, we sum all these 
+// results.
+
+float fmatrix_cofactor_expansion(fmatrix mat, int lr, int lc, int ur, int uc) {
+	if (ur - lr == 1) { // 2x2 matrix
+		return (MATRIX_AT(mat, lr, lc) * MATRIX_AT(mat, ur, uc)) - (MATRIX_AT(mat, lr, uc) * MATRIX_AT(mat, ur, lc));
+	}
+	printf("lr: %d lc: %d ur: %d uc: %d\n", lr, lc, ur, uc);
+	// iterate through the first column. Each element is a cofactor term
+	for (int i = lr; i < ur; i++) {
+		//printf("%g \n", MATRIX_AT(mat, i, lc));
+	}
+	printf("\n%g", MATRIX_AT(mat, 0, lc) * fmatrix_cofactor_expansion(mat, lr + 1, lc + 1, ur, uc));
+
+	return(0.0);
+}
