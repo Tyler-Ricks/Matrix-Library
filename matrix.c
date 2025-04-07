@@ -540,21 +540,39 @@ fmatrix fmatrix_col_sum(fmatrix mat, int dest, float c1, int src, float c2, pool
 // This is probably the second place where I can really hone down and optimize. For now, I'll just do basic
 // cofactor expansion because it is recursive and that's cool
 
+
+// finds a row to swap a 0 pivot with. returns -1 if none is found
+// used in functions that use gaussian elimination, such as fmatrix_triangle_determinant
+int find_pivot_row(fmatrix mat, int pivot_row, int col) {
+	for (int j = pivot_row; j < mat.m; j++) {
+		if (MATRIX_AT(mat, j, col) != 0) { return j; }
+	}
+	return -1;
+}
+
 // Cofactor expansion is complicated to implement. I'll do it later. For now, I think getting det from triangulating a matrix is a 
 // better idea. The stuff I figure out here will be useful for finding inverses as well.
 // Maybe move the gaussian elimination stuff to its own function? many matrix things use it. Maybe have an "eliminate from column" thing
 
+// calculates determinant of a square matrix by triangulating it. It does edit the matrix in place for now
+// Assumes that mat is a square matrix
 float fmatrix_triangle_determinant(fmatrix mat) {
 
 	float track = 1.0; // row operations will influence this value, which we divide by at the end
 
 	// gauss jordan (for each column, turn each element underneath the pivot into a 0 with row operations. Track the row operations in track
+	int pivot_row;
 	float pivot, row_value;
 	for (int i = 0; i < mat.n - 1; i++) {
+		pivot_row = find_pivot_row(mat, i, i); // find a pivot in col i
+		if(pivot_row == -1) { return 0.0; } // if none is found, det is 0
+		if(pivot_row != i){ fmatrix_row_swap_in(mat, i, pivot_row); } // if pivot is not at row i, swap it in
+		pivot = MATRIX_AT(mat, pivot_row, i);
 		pivot = MATRIX_AT(mat, i, i);
 		// check for pivot being 0. If it is, try to find a row to swap it with so we can do eliminations
 		// very nested. Maybe move the procedure to finding a non 0 to its own function
-		if (pivot == 0.0) { 
+
+		/*if (pivot == 0.0) {
 			for (int j = i; j < mat.m; j++) {
 				if (MATRIX_AT(mat, i, j) != 0) {
 					fmatrix_row_swap_in(mat, i, j);
@@ -563,9 +581,9 @@ float fmatrix_triangle_determinant(fmatrix mat) {
 				}
 			}
 			if(pivot == 0.0){ return 0.0; }
-		}
+		}*/
 		for (int j = i + 1; j < mat.m; j++) {
-			printf("\nA: \n");
+			printf("\nA: (pivot is %g)\n", pivot);
 			print_fmatrix(mat);
 			row_value = MATRIX_AT(mat, j, i);
 			if (row_value == 0) { continue; }
@@ -614,9 +632,7 @@ float fmatrix_determinant(fmatrix mat) {
 
 	//return fmatrix_cofactor_expansion(mat, 0, 0, mat.m - 1, mat.n - 1);
 	//return fmatrix_triangle_determinant(mat);
-
-	float wow = fmatrix_triangle_determinant(mat);
-	return wow;
+	return fmatrix_triangle_determinant(mat);
 }
 
 
