@@ -542,6 +542,7 @@ fmatrix fmatrix_col_sum(fmatrix mat, int dest, float c1, int src, float c2, pool
 
 // Cofactor expansion is complicated to implement. I'll do it later. For now, I think getting det from triangulating a matrix is a 
 // better idea. The stuff I figure out here will be useful for finding inverses as well.
+// Maybe move the gaussian elimination stuff to its own function? many matrix things use it. Maybe have an "eliminate from column" thing
 
 float fmatrix_triangle_determinant(fmatrix mat) {
 
@@ -551,6 +552,18 @@ float fmatrix_triangle_determinant(fmatrix mat) {
 	float pivot, row_value;
 	for (int i = 0; i < mat.n - 1; i++) {
 		pivot = MATRIX_AT(mat, i, i);
+		// check for pivot being 0. If it is, try to find a row to swap it with so we can do eliminations
+		// very nested. Maybe move the procedure to finding a non 0 to its own function
+		if (pivot == 0.0) { 
+			for (int j = i; j < mat.m; j++) {
+				if (MATRIX_AT(mat, i, j) != 0) {
+					fmatrix_row_swap_in(mat, i, j);
+					pivot = MATRIX_AT(mat, i, i);
+					break;
+				}
+			}
+			if(pivot == 0.0){ return 0.0; }
+		}
 		for (int j = i + 1; j < mat.m; j++) {
 			printf("\nA: \n");
 			print_fmatrix(mat);
