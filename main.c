@@ -295,22 +295,29 @@ void test_determinant() {
 	int col33 = 3;
 	int count33 = 1;
 
-	float matrixa[3][3] = {{1.0, 7.0, 0.3},
+	float matrixa[3][3] = {{1.0, 1.0, 1.0},
 						   {3.0, -2.0, 1.0},
 						   {2.5, -3.0, -4.0}};
+
+	/*float matrixa[3][3] = {{1.0, 0.0, 3.0},
+		{0.0, 1.0, 0.0},
+		{0.0, 0.0, 1.0}};*/
 
 	pool frame = create_pool(row33 * col33 * count33 * sizeof(float));
 	
 	fmatrix A = create_fmatrix(row33, col33, matrixa, &frame);
 
-	printf("A: \n");
+	printf("\nA: \n");
 	print_fmatrix(A);
 
-	printf("\n|A| = %g", fmatrix_determinant(A));
+	printf("\n|A| = %g\n", fmatrix_determinant(A));
+
+	printf("A: \n");
+	print_fmatrix(A);
 }
 
 int main() {
-	switch(5){
+	switch(10){
 	case 1:
 		test_transpose();
 		break;
