@@ -554,48 +554,42 @@ int find_pivot_row(fmatrix mat, int pivot_row, int col) {
 // better idea. The stuff I figure out here will be useful for finding inverses as well.
 // Maybe move the gaussian elimination stuff to its own function? many matrix things use it. Maybe have an "eliminate from column" thing
 
-// calculates determinant of a square matrix by triangulating it. It does edit the matrix in place for now
+// calculates determinant of a square matrix by triangulating it.
+// I copies the matrix to do operations to for now. It seems like you could do this lazily without copying or editing the matrix at all,
+// but worry about that later
 // Assumes that mat is a square matrix
-float fmatrix_triangle_determinant(fmatrix mat) {
+float fmatrix_triangle_determinant(fmatrix mat, pool *frame) {
+
+	fmatrix temp_mat = fmatrix_copy_alloc(mat, frame); // allocate a temporary copy of the input mat
 
 	float track = 1.0; // row operations will influence this value, which we divide by at the end
 
 	// gauss jordan (for each column, turn each element underneath the pivot into a 0 with row operations. Track the row operations in track
 	int pivot_row;
-	float pivot, row_value;
-	for (int i = 0; i < mat.n - 1; i++) {
-		pivot_row = find_pivot_row(mat, i, i); // find a pivot in col i
-		if(pivot_row == -1) { return 0.0; } // if none is found, det is 0
-		if(pivot_row != i){ fmatrix_row_swap_in(mat, i, pivot_row); } // if pivot is not at row i, swap it in
-		pivot = MATRIX_AT(mat, pivot_row, i);
-		pivot = MATRIX_AT(mat, i, i);
-		// check for pivot being 0. If it is, try to find a row to swap it with so we can do eliminations
-		// very nested. Maybe move the procedure to finding a non 0 to its own function
+	float pivot, row_value, result = 1.0;
+	for (int i = 0; i < temp_mat.n; i++) {
+		pivot_row = find_pivot_row(temp_mat, i, i);							// find a pivot in col i
+		if(pivot_row == -1) { result = 0; break; }							// if none is found, det is 0
+		if(pivot_row != i){ fmatrix_row_swap_in(temp_mat, i, pivot_row); }  // if pivot is not at row i, swap it in
+		pivot = MATRIX_AT(temp_mat, i, i);
 
-		/*if (pivot == 0.0) {
-			for (int j = i; j < mat.m; j++) {
-				if (MATRIX_AT(mat, i, j) != 0) {
-					fmatrix_row_swap_in(mat, i, j);
-					pivot = MATRIX_AT(mat, i, i);
-					break;
-				}
-			}
-			if(pivot == 0.0){ return 0.0; }
-		}*/
-		for (int j = i + 1; j < mat.m; j++) {
+		// now that pivot is found, eliminate elements below it
+		for (int j = i + 1; j < temp_mat.m; j++) {
 			printf("\nA: (pivot is %g)\n", pivot);
-			print_fmatrix(mat);
-			row_value = MATRIX_AT(mat, j, i);
-			if (row_value == 0) { continue; }
-			fmatrix_row_sum_in(mat, j, pivot, i, -row_value);
+			print_fmatrix(temp_mat);
+			row_value = MATRIX_AT(temp_mat, j, i);
+			if (row_value == 0.0) { continue; } // if element is already 0, don't eliminate
+			fmatrix_row_sum_in(temp_mat, j, pivot, i, -row_value);
 			track *= pivot;
 		}
+		result *= pivot; // multiply the found diagonal into result
 	}
 
-	// gets the product of the diagonal elements
-	float result = 1.0;
-	for (int i = 0; i < mat.m; i++) {
-		result *= MATRIX_AT(mat, i, i);
+	// free the temporary metrix from the pool
+	char* check = pool_free_from(frame, temp_mat.matrix);
+	if (check == NULL) {
+		printf("Failed to free temporary copy matrix from triangle det\n");
+		return -1;
 	}
 
 	return result / track;
@@ -622,9 +616,9 @@ float fmatrix_cofactor_expansion(fmatrix mat, int lr, int lc, int ur, int uc) {
 	return(0.0);
 }
 
-// checks if mat is non square, then calls fatrix_det (which recursively finds the determinant)
+// checks if mat is non square, then calls whichever determinent function to use
 
-float fmatrix_determinant(fmatrix mat) {
+float fmatrix_determinant(fmatrix mat, pool *frame) {
 	if (mat.m != mat.n) {
 		printf("The determinant for a non square matrix (%d x %d) does not exist\n", mat.m, mat.n);
 		exit(0); // okay do something else instead 
@@ -632,7 +626,7 @@ float fmatrix_determinant(fmatrix mat) {
 
 	//return fmatrix_cofactor_expansion(mat, 0, 0, mat.m - 1, mat.n - 1);
 	//return fmatrix_triangle_determinant(mat);
-	return fmatrix_triangle_determinant(mat);
+	return fmatrix_triangle_determinant(mat, frame);
 }
 
 

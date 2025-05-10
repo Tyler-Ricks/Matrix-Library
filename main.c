@@ -293,7 +293,7 @@ void test_col_scale() {
 void test_determinant() {
 	int row33 = 3;
 	int col33 = 3;
-	int count33 = 1;
+	int count33 = 2;
 
 	float matrixa[3][3] = {{1.0, 1.0, 1.0},
 						   {3.0, 3.0, 3.0},
@@ -310,10 +310,12 @@ void test_determinant() {
 	printf("\nA: \n");
 	print_fmatrix(A);
 
-	printf("\n|A| = %g\n", fmatrix_determinant(A));
+	printf("\n|A| = %g\n", fmatrix_determinant(A, &frame));
 
 	printf("A: \n");
 	print_fmatrix(A);
+
+	free_pool(&frame);
 }
 
 int main() {
