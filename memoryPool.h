@@ -24,6 +24,8 @@ typedef struct {
 	void* ptr;
 }pool;
 
+int is_in_pool(pool frame, void* place);
+
 pool create_pool(int size);
 
 void* pool_realloc(pool* frame, int input_size);
@@ -31,6 +33,7 @@ void* pool_realloc(pool* frame, int input_size);
 void* pool_alloc(pool* frame, void* input, int size);
 void* raw_pool_alloc(pool* frame, int size);
 
+void* pool_free_from(pool* frame, void* start);
 void free_pool(pool *frame);
 
 #endif

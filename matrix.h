@@ -11,9 +11,9 @@
 
 // both macros check fmatrix transpose flag. If it's set, then treat mat as a transpose
 // gets the element of the matrix at mat[i][j]
-#define MATRIX_AT(mat, i, j) ((mat.transpose) ? (mat.matrix[j * mat.m + i]) : (mat.matrix[i * mat.n + j]))
+#define MATRIX_AT(mat, i, j) ((mat.transpose) ? (mat.matrix[(j) * mat.m + (i)]) : (mat.matrix[(i) * mat.n + (j)]))
 // macro to get array index given matrix index
-#define INDEX_AT(mat, i, j) ((mat.transpose) ? (j * mat.m + i) : (i * mat.n + j))
+#define INDEX_AT(mat, i, j) ((mat.transpose) ? ((j) * mat.m + (i)) : ((i) * mat.n + (j)))
 
 // old implementation before transpose flag
 #define OLD_MATRIX_AT(mat, i, j) (mat.matrix[i * mat.n + j])
@@ -106,5 +106,11 @@ void fmatrix_col_swap_in(fmatrix mat, int col1, int col2);
 fmatrix fmatrix_col_swap(fmatrix mat, int col1, int col2, pool *frame);
 void fmatrix_col_sum_in(fmatrix mat, int dest, float c1, int src, float c2);
 fmatrix fmatrix_col_sum(fmatrix mat, int dest, float c1, int src, float c2, pool *frame);
+
+int find_pivot_row(fmatrix mat, int pivot_row, int col);
+float fmatrix_triangle_determinant(fmatrix mat, pool* frame);
+float fmatrix_cofactor_expansion(fmatrix mat, int lr, int lc, int ur, int uc);
+float fmatrix_determinant(fmatrix mat, pool *frame);
+
 
 #endif MATRIX_H
