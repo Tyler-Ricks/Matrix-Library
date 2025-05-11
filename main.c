@@ -293,7 +293,7 @@ void test_col_scale() {
 void test_determinant() {
 	int row33 = 3;
 	int col33 = 3;
-	int count33 = 2;
+	int count33 = 1;
 
 	float matrixa[3][3] = {{1.0, 1.0, 1.0},
 						   {3.0, 3.0, 3.0},

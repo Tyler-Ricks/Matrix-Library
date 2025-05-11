@@ -62,6 +62,7 @@ pool create_pool(int size) {
 //
 void* pool_realloc(pool* frame, int input_size) {
 	int old_size = ((char*)frame->end - (char*)frame->start);
+	int offset = (char*)frame->ptr - (char*)frame->start;		// for updating where the ptr goes
 
 	if (old_size + input_size > POOL_SIZE_CAP) {
 		printf("Pool size cap hit, returning NULL\n");
@@ -83,8 +84,9 @@ void* pool_realloc(pool* frame, int input_size) {
 	frame->start = check; // so if you free something that's been realloc'd, you have to pass in the pointer that was
 						  // returned by the realloc. They would be equivalent in most cases, but I think if realloc
 						  // had to move the memory block elsewhere, this would matter (but it would give me errors 
-						  // for accessing stuff pointing to locations int the pool anyways) 
+						  // for accessing stuff pointing to locations in the pool anyways) 
 
+	frame->ptr = (char*)frame->start + offset;
 	frame->end = (char*)frame->start + new_size;
 }
 
@@ -140,7 +142,7 @@ void* raw_pool_alloc(pool* frame, int size) {
 		printf("palloc ran out of space in frame, reallocating\n");
 		//return(NULL); // realloc is banned for now
 		check = pool_realloc(frame, size);
-		//bump = (char*) frame->ptr - size;
+		bump = (char*) frame->ptr + size;
 	}
 
 	if (!check) { // catches failed realloc

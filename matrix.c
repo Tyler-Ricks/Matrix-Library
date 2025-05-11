@@ -520,11 +520,11 @@ void fmatrix_col_sum_in(fmatrix mat, int dest, float c1, int src, float c2) {
 
 fmatrix fmatrix_col_sum(fmatrix mat, int dest, float c1, int src, float c2, pool *frame) {
 	if (dest >= mat.m || dest < 0) {
-		printf("col_sum error: \dest col %d out of bounds (make sure you are 0-indexed)\n", dest);
+		printf("col_sum error: dest col %d out of bounds (make sure you are 0-indexed)\n", dest);
 		return;
 	}
 	if (src >= mat.m || src < 0) {
-		printf("col_sum error: \src col %d out of bounds (make sure you are 0-indexed)\n", src);
+		printf("col_sum error: src col %d out of bounds (make sure you are 0-indexed)\n", src);
 		return;
 	}
 
@@ -575,8 +575,8 @@ float fmatrix_triangle_determinant(fmatrix mat, pool *frame) {
 
 		// now that pivot is found, eliminate elements below it
 		for (int j = i + 1; j < temp_mat.m; j++) {
-			printf("\nA: (pivot is %g)\n", pivot);
-			print_fmatrix(temp_mat);
+			//printf("\nA: (pivot is %g)\n", pivot);
+			//print_fmatrix(temp_mat);
 			row_value = MATRIX_AT(temp_mat, j, i);
 			if (row_value == 0.0) { continue; } // if element is already 0, don't eliminate
 			fmatrix_row_sum_in(temp_mat, j, pivot, i, -row_value);
@@ -588,7 +588,7 @@ float fmatrix_triangle_determinant(fmatrix mat, pool *frame) {
 	// free the temporary metrix from the pool
 	char* check = pool_free_from(frame, temp_mat.matrix);
 	if (check == NULL) {
-		printf("Failed to free temporary copy matrix from triangle det\n");
+		printf("Failed to free temporary copy matrix from triangle determinant\n");
 		return -1;
 	}
 
