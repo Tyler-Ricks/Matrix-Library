@@ -78,8 +78,8 @@ pool create_pool(int size) {
 }
 
 new_pool new_create_pool(int size) {
-	void* start;
-	if ((start = malloc(size)) == NULL) {
+	void* start = malloc(size);
+	if (start == NULL) {
 		printf("createPool allocation failed, returning pool of NULL\n");
 		return (new_pool){NULL, 0, NULL, NULL};
 	}
@@ -101,8 +101,8 @@ new_pool* heap_create_pool(int size) {
 		return NULL;
 	}
 
-	new_pool* result;
-	if ((result = malloc(sizeof(new_pool))) == NULL) {
+	new_pool* result = malloc(sizeof(new_pool));
+	if (result == NULL) {
 		printf("failed to allocate memory for a pool struct, returning NULL\n");
 		return NULL;
 	}
@@ -111,6 +111,8 @@ new_pool* heap_create_pool(int size) {
 	result->size = size;
 	result->ptr = start;
 	result->next = NULL;
+
+	return result;
 }
 
 // rewriting pool_alloc/realloc:
@@ -153,6 +155,13 @@ void* pool_realloc(pool* frame, int input_size) {
 	frame->end = (char*)frame->start + new_size;
 }
 
+// tests if pool frame is large enough for an input of input_size
+// returns true if 
+int pool_has_capacity(new_pool* frame, int input_size) {
+	int new_size = ((char*)frame->ptr + input_size) - (char*)frame->start;
+	return(new_size <= frame->size);
+}
+
 // checks all allocated pools for room for the input. 
 // If one is found, return a pointer to that pool
 // If not, allocate a new pool with a new size, then return a pointer to it
@@ -180,7 +189,7 @@ void* new_pool_realloc(new_pool* frame, int input_size) {
 
 	new_pool* newPool = heap_create_pool(new_size);
 	if (newPool == NULL) {
-		print("pool reallocation failed!\n");
+		printf("pool reallocation failed!\n");
 		exit(1);
 	}
 
@@ -224,13 +233,6 @@ void* pool_alloc(pool* frame, void* input, int size) {
 	// Return pointer to the start of what we just allocated
 	//printf("%g, %g\n", *((float*)input), *((float*)result));
 	return result;
-}
-
-// tests if pool frame is large enough for an input of input_size
-// returns true if 
-int pool_has_capacity(new_pool* frame, int input_size) {
-	int new_size = ((char*)frame->ptr + input_size) - (char*)frame->start;
-	return(new_size <= frame->size);
 }
 
 // allocates memory on an input pool, then copies input data into that memory
