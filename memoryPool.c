@@ -316,10 +316,25 @@ void free_pool(pool *frame) {
 	frame->next = NULL;
 }
 
+
 void new_free_pool(new_pool* frame) {
+	if (frame->next != NULL) {
+		heap_free_pool(frame->next);
+	}
 	free(frame->start);
 	frame->start = NULL;
-	frame->size = NULL;
+	//frame->size = 0;
+	frame->size -1; //maybe set to negative for checks
 	frame->ptr = NULL;
 	frame->next = NULL;
+}
+
+// recursively frees pools from the end of the chain to the start
+// the first pool is not on the heap. Don't free it
+void heap_free_pool(new_pool* frame) {
+	if (frame->next != NULL) {
+		new_free_pool(frame->next);
+	}
+	free(frame->start);
+	free(frame);
 }
