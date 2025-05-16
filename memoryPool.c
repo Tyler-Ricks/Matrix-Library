@@ -1,9 +1,30 @@
 // Refactor checklist:
-// (done) 1) refactor the pool struct to initialize ptr to start instead of end
-// (done) 2) refactor pool_alloc and raw_pool_alloc
-// (done) 3) refactor pool_realloc
-// (done) 4) change any bump downwards comments
-// (done) 5) make better comments in general
+//        1) rewrite pool_alloc
+//		  2) rewrite raw_pool_alloc
+//		  3) rewrite pool_realloc
+//		  4) rewire pool_free
+//		  5) maybe have pool store size instead of an end pointer? it's unnecessary at this point I think but still
+//
+
+
+// rework memoryPool! This may just be a complete redo of the whole thing, depending on where my thoughts go 
+// I would like realloc to work. I don't want to use it overall, but I want my system to have it be available 
+// 
+// The Problem:
+// Things using memoryPool (fmatrix) rely on maintaining pointers to the data stored on the pool. 
+// pool_realloc resizes the pool by using realloc()
+// however, realloc() happens to move all the allocated data to a new location
+// So, I either need a way to update pointers maintained by an fmatrix, or change how memoryPool works entirely.
+// 
+// One possibility for changing how memoryPool works is to avoid realloc(). 
+// - This could be done with linked lists. The pool struct could store a pointer to the next pool, and we could
+//   make it so pool_realloc simply creates a new pool, and lets the old pool point to the new one. This would
+//   make allocation a bit tricky, as I'd need to decide if it's possible to store memory across two pools as
+//   to not waste space, or to waste space by just allocating the whole chunk on the new pool. For the latter
+//   option, maybe it's possible to free up the unneeded space?
+// - maybe have a similar idea to the linked list, but instead have a max priority queue of allocated pools
+//   sorted by reaining space?
+//
 
 #include "memoryPool.h"
 
@@ -51,9 +72,50 @@ pool create_pool(int size) {
 	return (pool) {
 		start,
 		end,
-		start // set ptr to start for upward bumping
+		start, // set ptr to start for upward bumping
+		NULL
 	};
 }
+
+new_pool new_create_pool(int size) {
+	void* start;
+	if ((start = malloc(size)) == NULL) {
+		printf("createPool allocation failed, returning pool of NULL\n");
+		return (new_pool){NULL, 0, NULL, NULL};
+	}
+
+	return (new_pool) {
+		start,				// start of pool
+		size,				// size of pool
+		start,				// first available spot in pool
+		NULL				// pointer to next pool
+	};
+}
+
+// allocates a pool on the heap
+// used by pool_realloc to create a new pool that doesn't just exist on the stack
+new_pool* heap_create_pool(int size) {
+	void* start;
+	if ((start = malloc(size)) == NULL) {
+		printf("failed to allocate memory for a new pool, returning NULL\n");
+		return NULL;
+	}
+
+	new_pool* result;
+	if ((result = malloc(sizeof(new_pool))) == NULL) {
+		printf("failed to allocate memory for a pool struct, returning NULL\n");
+		return NULL;
+	}
+
+	result->start = start;
+	result->size = size;
+	result->ptr = start;
+	result->next = NULL;
+}
+
+// rewriting pool_alloc/realloc:
+// It seems like an almost full rewrite is necessary. If I am rolling with the linked list of pools implementation,
+// I need to be able to know which pool to allocate on, and update that after "reallocating"
 
 // moves the end pointer upwards, allowing for more memory to be allocated on the pool. Returns unmoved ptr otherwise
 //   - returns NULL if reallocation fails, or POOL_CAP_SIZE is exceeded
@@ -61,6 +123,7 @@ pool create_pool(int size) {
 //       > if this is not big enough for the new input, then it increases it by GROWTH_FACTOR * (old_size + input_size)
 //
 void* pool_realloc(pool* frame, int input_size) {
+
 	int old_size = ((char*)frame->end - (char*)frame->start);
 	int offset = (char*)frame->ptr - (char*)frame->start;		// for updating where the ptr goes
 
@@ -88,6 +151,43 @@ void* pool_realloc(pool* frame, int input_size) {
 
 	frame->ptr = (char*)frame->start + offset;
 	frame->end = (char*)frame->start + new_size;
+}
+
+// checks all allocated pools for room for the input. 
+// If one is found, return a pointer to that pool
+// If not, allocate a new pool with a new size, then return a pointer to it
+
+void* new_pool_realloc(new_pool* frame, int input_size) {
+
+	// locate the first pool with capacity
+	while (frame->next != NULL) {
+		frame = frame->next;
+		if (pool_has_capacity(frame, input_size)) { // if a pool with capacity is found, return it
+			return frame; 
+		}
+	}
+	
+	// determine new pool size
+	if (frame->size + input_size > POOL_SIZE_CAP) {
+		printf("Pool size cap hit, returning NULL\n");
+		return NULL;
+	}
+	int new_size = frame->size * GROWTH_FACTOR;
+	if (new_size < frame->size + input_size) { // checks for new size not being enough for the input
+		new_size = GROWTH_FACTOR * (frame->size + input_size);
+	}
+	if (new_size > POOL_SIZE_CAP) { new_size = POOL_SIZE_CAP; } // checks for new size being larger than cap
+
+	new_pool* newPool = heap_create_pool(new_size);
+	if (newPool == NULL) {
+		print("pool reallocation failed!\n");
+		exit(1);
+	}
+
+	// set the previous pool's next pointer to the new pool
+	frame->ptr = newPool;
+
+	return newPool;
 }
 
 // Allocates memory from the pool, copies input into that memory. Returns a pointer to the start of that memory
@@ -126,6 +226,26 @@ void* pool_alloc(pool* frame, void* input, int size) {
 	return result;
 }
 
+// tests if pool frame is large enough for an input of input_size
+// returns true if 
+int pool_has_capacity(new_pool* frame, int input_size) {
+	int new_size = ((char*)frame->ptr + input_size) - (char*)frame->start;
+	return(new_size <= frame->size);
+}
+
+// allocates memory on an input pool, then copies input data into that memory
+// returns a pointer to the allocated memory
+void* new_pool_alloc(new_pool* frame, void* input, int input_size) {
+	if (!pool_has_capacity) {
+		printf("must reallocate, but we don't do that yet\n");
+		exit(0);
+	}
+
+	void* result = memcpy(frame->ptr, input, input_size);	// copy data from input
+	frame->ptr = (char*)frame->ptr + input_size;			// update the start ptr in frame
+	return result;											// return pointer to the start of allocated data
+}
+
 // Allocates memory from the pool. Returns a pointer to the start of that memory
 //   - if it fails, it returns NULL
 // Used for allocating space to fill later
@@ -159,6 +279,19 @@ void* raw_pool_alloc(pool* frame, int size) {
 	return result;
 }
 
+// allocates a block of an input size onto the input pool
+// returns a pointer to the allocated memory
+void* new_raw_pool_alloc(new_pool* frame, int size) {
+	if (!pool_has_capacity) {
+		printf("must reallocate, but we don't do that yet\n");
+		exit(0);
+	}
+
+	void* result = frame->ptr;
+	frame->ptr = (char*)frame->ptr + size;
+	return result;
+}
+
 
 // frees memory in frame after pointer start
 // Literally just moves frame->ptr to *start
@@ -180,4 +313,13 @@ void free_pool(pool *frame) {
 	frame->start = NULL;
 	frame->end = NULL;
 	frame->ptr = NULL;
+	frame->next = NULL;
+}
+
+void new_free_pool(new_pool* frame) {
+	free(frame->start);
+	frame->start = NULL;
+	frame->size = NULL;
+	frame->ptr = NULL;
+	frame->next = NULL;
 }

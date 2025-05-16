@@ -22,7 +22,19 @@ typedef struct {
 	// thus: start <= ptr <= end
 	// If we try to allocate beyond this, either disallow it, or realloc
 	void* ptr;
+	pool* next;
 }pool;
+
+// potential new pool struct, stores a size instead of an end pointer
+typedef struct {
+	void* start;
+	int size;
+	// start is at a low address and end is at a high one.
+	// thus: start <= ptr <= end
+	// If we try to allocate beyond this, either disallow it, or realloc
+	void* ptr;
+	new_pool* next;
+}new_pool;
 
 int is_in_pool(pool frame, void* place);
 
