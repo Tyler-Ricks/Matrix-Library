@@ -37,13 +37,10 @@ typedef struct {
 	new_pool* next;
 }new_pool;*/
 typedef struct {
-	void* start;
-	int size;
-	// start is at a low address and end is at a high one.
-	// thus: start <= ptr <= end
-	// If we try to allocate beyond this, either disallow it, or realloc
-	void* ptr;
-	struct new_pool* next;
+	void* start;				// pointer to start of allocated memory
+	int size;					// max size of the pool in number of bytes
+	void* ptr;					// pointer to the first free spot in the pool
+	struct new_pool* next;		// pointer to the next allocated pool
 }new_pool;
 
 int is_in_pool(pool frame, void* place);

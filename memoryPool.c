@@ -134,6 +134,7 @@ void* pool_realloc(pool* frame, int input_size) {
 		return NULL;
 	}
 	int new_size = old_size * GROWTH_FACTOR;
+	if(new_size == old_size){ new_size++; } // in case initial size is 1
 	if (new_size < old_size + input_size) { // checks for new size not being enough for the input
 		new_size = GROWTH_FACTOR * (old_size + input_size);
 	}
@@ -165,7 +166,7 @@ int pool_has_capacity(new_pool* frame, int input_size) {
 // checks all allocated pools for room for the input. 
 // If one is found, return a pointer to that pool
 // If not, allocate a new pool with a new size, then return a pointer to it
-
+// may be worth forcing multiples of 4 for pool size? it shouldn't be too hard to facilitate
 void* new_pool_realloc(new_pool* frame, int input_size) {
 
 	// locate the first pool with capacity
@@ -182,10 +183,11 @@ void* new_pool_realloc(new_pool* frame, int input_size) {
 		return NULL;
 	}
 	int new_size = frame->size * GROWTH_FACTOR;
-	if (new_size < frame->size + input_size) { // checks for new size not being enough for the input
+	if(new_size == frame->size){ new_size = 2 * frame->size; }		// in case initial size is 1
+	if (new_size < input_size) {									// checks for new size not being enough for the input
 		new_size = GROWTH_FACTOR * (frame->size + input_size);
 	}
-	if (new_size > POOL_SIZE_CAP) { new_size = POOL_SIZE_CAP; } // checks for new size being larger than cap
+	if (new_size > POOL_SIZE_CAP) { new_size = POOL_SIZE_CAP; }		// checks for new size being larger than cap
 
 	new_pool* newPool = heap_create_pool(new_size);
 	if (newPool == NULL) {
@@ -194,7 +196,7 @@ void* new_pool_realloc(new_pool* frame, int input_size) {
 	}
 
 	// set the previous pool's next pointer to the new pool
-	frame->ptr = newPool;
+	frame->next = newPool;
 
 	return newPool;
 }
@@ -238,9 +240,14 @@ void* pool_alloc(pool* frame, void* input, int size) {
 // allocates memory on an input pool, then copies input data into that memory
 // returns a pointer to the allocated memory
 void* new_pool_alloc(new_pool* frame, void* input, int input_size) {
-	if (!pool_has_capacity) {
-		printf("must reallocate, but we don't do that yet\n");
-		exit(0);
+	if (!pool_has_capacity(frame, input_size)) {
+		printf("pool ran out of space, reallocating\n");
+		frame = new_pool_realloc(frame, input_size);
+	}
+
+	if (frame == NULL) {
+		printf("cannot try to allocate on a NULL frame\n");
+		exit(1);
 	}
 
 	void* result = memcpy(frame->ptr, input, input_size);	// copy data from input
@@ -284,9 +291,9 @@ void* raw_pool_alloc(pool* frame, int size) {
 // allocates a block of an input size onto the input pool
 // returns a pointer to the allocated memory
 void* new_raw_pool_alloc(new_pool* frame, int size) {
-	if (!pool_has_capacity) {
-		printf("must reallocate, but we don't do that yet\n");
-		exit(0);
+	if (!pool_has_capacity(frame, size)) {
+		printf("pool ran out of space, reallocating\n");
+		frame = new_pool_realloc(frame, size);
 	}
 
 	void* result = frame->ptr;
@@ -337,6 +344,7 @@ void heap_free_pool(new_pool* frame) {
 	if (frame->next != NULL) {
 		new_free_pool(frame->next);
 	}
+	//printf("freeing pool with size %d\n", frame->size);
 	free(frame->start);
 	free(frame);
 }
