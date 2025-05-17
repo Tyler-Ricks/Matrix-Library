@@ -176,64 +176,64 @@ void test_pool() {
 	// initial alloc test
 	{
 		int size = 2;
-		new_pool frame = new_create_pool(2 * sizeof(float));
+		pool frame = create_pool(2 * sizeof(float));
 		printf("pool created. size: %d\n", frame.size);
 
 		float n1 = 3.2;
-		float* a = new_pool_alloc(&frame, &n1, sizeof(float));
+		float* a = pool_alloc(&frame, &n1, sizeof(float));
 	
 		printf("allocated %f to pointer a", *a);
 
 		float n2 = 12.1;
-		float* b = new_pool_alloc(&frame, &n2, sizeof(float));
+		float* b = pool_alloc(&frame, &n2, sizeof(float));
 
 		// test to make sure ptr on pool bumps properly
 		printf("allocated n2 to b. stuff on frame:\n a: %f\n b: %f\n", *a, *b);
 
 		// test basic free pool
-		new_free_pool(&frame);
+		free_pool(&frame);
 		a = NULL; b = NULL;
 	}
 
 	// test pool reallocation
 	{
 		int size = 1;
-		new_pool frame = new_create_pool(size * sizeof(int));
+		pool frame = create_pool(size * sizeof(int));
 		printf("size of first int pool: %d\n", frame.size);
 
 		int x = 2;
-		int* c = new_pool_alloc(&frame, &x, sizeof(int));
+		int* c = pool_alloc(&frame, &x, sizeof(int));
 
 		int y = 3;
-		int* d = new_pool_alloc(&frame, &y, sizeof(int));
+		int* d = pool_alloc(&frame, &y, sizeof(int));
 
 		if (frame.next == NULL) {
 			printf("something went wrong with pool realloc!\n");
 			exit(1);
 		}
 
-		new_pool* other_frame = frame.next;
+		pool* other_frame = frame.next;
 		printf("size of second pool: %d\n", other_frame->size);
 
 		printf("allocated stuff: \n  c = %d\n  d = %d\n", *c, *d);
 
 		// test free_pool on a LL of pools
-		new_free_pool(&frame);
+		free_pool(&frame);
 	}
 
 	// test raw pool allocation
 	{
 		int size = 2;
-		new_pool frame = new_create_pool(size * sizeof(int));
+		pool frame = create_pool(size * sizeof(int));
 
-		int* a = new_raw_pool_alloc(&frame, sizeof(int));
+		int* a = raw_pool_alloc(&frame, sizeof(int));
 		*a = 7;
 
-		int* b = new_raw_pool_alloc(&frame, sizeof(int));
+		int* b = raw_pool_alloc(&frame, sizeof(int));
 		*b = 6;
 
 		printf("allocated stuff:\n  a = %d\n  b = %d", *a, *b);
-		new_free_pool(&frame);
+		free_pool(&frame);
 	}
 }
 
