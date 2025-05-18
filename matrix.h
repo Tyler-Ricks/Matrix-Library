@@ -68,6 +68,7 @@ typedef struct{
 }fmatrix;
 
 fmatrix create_fmatrix(int m, int n, float* matrix, pool *frame);
+fmatrix fmatrix_create_identity(int m, int n, pool* frame);
 
 void print_fmatrix(fmatrix mat);
 void print_fpool(pool *frame);
@@ -112,5 +113,6 @@ float fmatrix_triangle_determinant(fmatrix mat, pool* frame);
 float fmatrix_cofactor_expansion(fmatrix mat, int lr, int lc, int ur, int uc);
 float fmatrix_determinant(fmatrix mat, pool *frame);
 
+fmatrix fmatrix_inverse(fmatrix mat, pool* frame);
 
 #endif MATRIX_H

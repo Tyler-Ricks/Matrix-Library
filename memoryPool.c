@@ -27,7 +27,7 @@ pool create_pool(int size) {
 	void* start = malloc(size);
 	if (start == NULL) {
 		printf("createPool allocation failed, returning pool of NULL\n");
-		return (pool){NULL, 0, NULL, NULL};
+		return (pool){NULL, -1, NULL, NULL};
 	}
 
 	return (pool) {
