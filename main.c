@@ -366,6 +366,11 @@ void test_determinant() {
 	free_pool(&frame);
 }
 
+void test_inverse() {
+
+
+}
+
 int main() {
 	switch(5){
 	case 1:

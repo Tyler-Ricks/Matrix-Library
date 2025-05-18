@@ -33,6 +33,36 @@ fmatrix create_fmatrix(int m, int n, float* matrix, pool* frame) {
 	return (fmatrix) {m, n, matrix, 0};
 }
 
+// returns an identity matrix of size m x n, allocated on frame
+// returns ERROR_FMATRIX upon failure
+fmatrix fmatrix_create_identity(int m, int n, pool* frame) {
+	if (m < 0 || n < 0) {
+		printf("fmatrix must have positive row/columns\n");
+		return ERROR_FMATRIX;
+	}
+	if (!frame || !frame->start) {
+		printf("failed to create matrix (faulty input frame). Returning empty matrix\n");
+		return ERROR_FMATRIX;
+	}
+
+	float* matrix = raw_pool_alloc(frame, m * n * sizeof(float));
+	if (matrix == NULL) {
+		print("pool allocation for identity matrix failed, returning error matrix");
+	}
+
+	fmatrix mat = (fmatrix) {m, n, matrix, 0};
+
+	// initialize all values to 0 except where i = j
+	for (int i = 0; i < m; i++) {
+		for (int j = 0; j < n; j++) {
+			if(i == j){ matrix[INDEX_AT(mat, i, j)] = 1; }
+			else{ matrix[INDEX_AT(mat, i, j)] = 0; }
+		}
+	}
+
+	return mat;
+}
+
 // Utilities
 
 // prints an input matrix in row major order.
@@ -555,7 +585,7 @@ int find_pivot_row(fmatrix mat, int pivot_row, int col) {
 // Maybe move the gaussian elimination stuff to its own function? many matrix things use it. Maybe have an "eliminate from column" thing
 
 // calculates determinant of a square matrix by triangulating it.
-// I copies the matrix to do operations to for now. It seems like you could do this lazily without copying or editing the matrix at all,
+// copies the matrix to do operations to for now. It seems like you could do this lazily without copying or editing the matrix at all,
 // but worry about that later
 // Assumes that mat is a square matrix
 float fmatrix_triangle_determinant(fmatrix mat, pool *frame) {
@@ -586,7 +616,7 @@ float fmatrix_triangle_determinant(fmatrix mat, pool *frame) {
 	}
 
 	// free the temporary metrix from the pool
-	char* check = pool_free_from(frame, temp_mat.matrix);
+	void* check = pool_free_from(frame, temp_mat.matrix);
 	if (check == NULL) {
 		printf("Failed to free temporary copy matrix from triangle determinant\n");
 		return -1;
@@ -630,3 +660,48 @@ float fmatrix_determinant(fmatrix mat, pool *frame) {
 }
 
 
+// matrix inversion stuff
+
+// finds and returns the inverse of mat. 
+// returns ERROR_FMATRIX if an mat is not invertible
+fmatrix fmatrix_inverse(fmatrix mat, pool* frame) {
+	if (mat.m != mat.n) { return ERROR_FMATRIX; }
+
+	fmatrix result = fmatrix_create_identity(mat.m, mat.n, frame);	// initialize an identity matrix
+	fmatrix mat_copy = fmatrix_copy_alloc(mat, frame);				// for not modifying the input matrix. allocate second to free later
+
+	int pivot_row;
+	float row_value;												// for checking if we even need to make an elimination for an element
+	for (int i = 0; i < mat_copy.n; i++) {							// for each column, iterate and eliminate elements below pivots
+		pivot_row = find_pivot_row(mat_copy, i, i);
+		if(pivot_row = -1) { return ERROR_FMATRIX; }				// no pivot was found, so mat is not invertible
+		if(pivot_row != i) { 
+			fmatrix_row_swap_in(mat_copy, i, pivot_row);			// swap the located pivot to the proper row
+			fmatrix_row_swap_in(result, i, pivot_row);				// do it for the result matrix as well
+		}
+
+		float normalize = 1.0 / MATRIX_AT(mat_copy, i, i);
+		fmatrix_row_scale_in(mat_copy, i, normalize);				// set the pivot to 1 by scaling its row
+		fmatrix_row_scale_in(result, i, normalize);
+		
+		// for each row, eliminate elements under the pivot
+		for (int j = 0; j < mat_copy.m; j++) {
+			if(i == j) { continue; } // don't eliminate the pivot
+			row_value = MATRIX_AT(mat_copy, j, i);
+			if(row_value == 0){ continue; } // no elimination necessary
+			fmatrix_row_sum_in(mat_copy, j, 1.0, i, -row_value);	// eliminate the element
+			fmatrix_row_sum_in(result,	 j, 1.0, i, -row_value);
+		}
+	}
+
+	// free the temporary matrix from the pool
+	/*void* check = pool_free_from(frame, mat_copy.matrix);
+	if (check == NULL) {
+		printf("Failed to free temporary copy matrix from triangle determinant\n");
+		return ERROR_FMATRIX;
+	}
+
+	return(result);*/
+
+	return mat_copy;
+}
