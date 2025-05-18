@@ -27,7 +27,7 @@ pool* heap_create_pool(int size);
 
 int pool_has_capacity(pool* frame, int input_size);
 
-void* pool_realloc(pool* frame, int input_size);
+pool* pool_realloc(pool* frame, int input_size);
 
 void* pool_alloc(pool* frame, void* input, int input_size);
 void* raw_pool_alloc(pool* frame, int size);

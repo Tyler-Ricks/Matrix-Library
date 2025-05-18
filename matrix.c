@@ -47,7 +47,8 @@ fmatrix fmatrix_create_identity(int m, int n, pool* frame) {
 
 	float* matrix = raw_pool_alloc(frame, m * n * sizeof(float));
 	if (matrix == NULL) {
-		print("pool allocation for identity matrix failed, returning error matrix");
+		printf("pool allocation for identity matrix failed, returning error matrix");
+		return ERROR_FMATRIX;
 	}
 
 	fmatrix mat = (fmatrix) {m, n, matrix, 0};
@@ -674,7 +675,7 @@ fmatrix fmatrix_inverse(fmatrix mat, pool* frame) {
 	float row_value;												// for checking if we even need to make an elimination for an element
 	for (int i = 0; i < mat_copy.n; i++) {							// for each column, iterate and eliminate elements below pivots
 		pivot_row = find_pivot_row(mat_copy, i, i);
-		if(pivot_row = -1) { return ERROR_FMATRIX; }				// no pivot was found, so mat is not invertible
+		if(pivot_row == -1) { return ERROR_FMATRIX; }				// no pivot was found, so mat is not invertible
 		if(pivot_row != i) { 
 			fmatrix_row_swap_in(mat_copy, i, pivot_row);			// swap the located pivot to the proper row
 			fmatrix_row_swap_in(result, i, pivot_row);				// do it for the result matrix as well
@@ -695,13 +696,13 @@ fmatrix fmatrix_inverse(fmatrix mat, pool* frame) {
 	}
 
 	// free the temporary matrix from the pool
-	/*void* check = pool_free_from(frame, mat_copy.matrix);
+	void* check = pool_free_from(frame, mat_copy.matrix);
 	if (check == NULL) {
 		printf("Failed to free temporary copy matrix from triangle determinant\n");
 		return ERROR_FMATRIX;
 	}
 
-	return(result);*/
+	return(result);
 
-	return mat_copy;
+	//return mat_copy;
 }
