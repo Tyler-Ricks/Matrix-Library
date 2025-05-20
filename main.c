@@ -366,9 +366,11 @@ void test_determinant() {
 	free_pool(&frame);
 }
 
+/*void run_function(fmatrix mat, pool* frame, (*func)(int n, ...) {
+	
+}*/
 
-void run_inverse(int r, int c, float* mat) {
-
+void run_normal_inverse(int r, int c, float* mat) {
 	int count = 3; // one for the input, one for the copy of the input, and a third one for the inverse
 	pool frame = create_pool(count * r * c * sizeof(float));
 
@@ -395,34 +397,70 @@ void run_inverse(int r, int c, float* mat) {
 	free_pool(&frame);
 }
 
+void run_transpose_inverse(int r, int c, float* mat) {
+	int count = 3; // one for the input, one for the copy of the input, and a third one for the inverse
+	pool frame = create_pool(count * r * c * sizeof(float));
+
+	if (frame.start == NULL) {
+		exit(1);
+	}
+
+	fmatrix A = create_fmatrix(r, c, mat, &frame);
+	printf("testing matrix:\n");
+	print_fmatrix(A);
+
+	printf("Transpose: \n");
+	fmatrix_transpose_in(&A);
+	print_fmatrix(A);
+
+	printf("\ninverse:\n");
+
+	fmatrix invA = fmatrix_inverse(A, &frame);
+
+	if (invA.matrix == NULL){
+		printf("matrix could not be inverted!\n");
+		return;
+	}
+
+	print_fmatrix(invA);
+	printf("\n");
+
+	free_pool(&frame);
+}
+
 void test_inverse() {
+	// test transpose for each case as well
 
 	// test a basic matrix
 	{
-		printf("testing matrix A:\n");
+		printf("testing invertible matrix:\n");
 		float A[3][3] = {{3.0, 2.0, 1.0},
 							{-1.0, 0.0, 5.0},
 							{2.0, 2.0, 2.0}};
-		run_inverse(3, 3, A);
+		run_normal_inverse(3, 3, A);
+		run_transpose_inverse(3, 3, A);
 	}
 
 	// test a non square matrix
 	{
+		printf("testing non square matrix:\n");
 		float B[3][2] = {{1.0, 2.0},
 						 {3.0, 0.0},
 						 {-3.2, 4.2}};
-		run_inverse(3, 2, B);
+		run_normal_inverse(3, 2, B);
+		run_transpose_inverse(3, 2, B);
 	}
 
 	// test a square, but not invertible, matrix
 	{
+		printf("testing non invertible matrix:\n");
 		float C[3][3] = {{1.0, 3.0, -1.0},
 						  {-4.0, 2.0, 2.0},
 						  {-3.0, 5.0, 1.0}};
 
-		run_inverse(3, 3, C);
+		run_normal_inverse(3, 3, C);
+		run_transpose_inverse(3, 3, C);
 	}
-
 }
 
 int main() {
