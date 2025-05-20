@@ -118,5 +118,6 @@ float fmatrix_determinant(fmatrix mat, pool *frame);
 fmatrix fmatrix_inverse(fmatrix mat, pool* frame);
 
 fmatrix fmatrix_col_space(fmatrix mat, pool* frame);
+fmatrix fmatrix_row_space(fmatrix mat, pool* frame);
 
 #endif MATRIX_H

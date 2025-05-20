@@ -753,13 +753,15 @@ fmatrix fmatrix_inverse(fmatrix mat, pool* frame) {
 // I could potentially write a proper in place transpose function, then use free from, then edit the fmatrix dimensions, then transpose back
 // But there could be an easier and more efficient way
 // For now, I am allocating another fmatrix on the pool, putting the pivot columns into it, then returning that
+// you could allocate room for the result fmatrix, then the copy, and then at the end, free from the start of unused columns in result?
+// I would rather work towards doing it all inside the copy matrix
 fmatrix fmatrix_col_space(fmatrix mat, pool* frame) {
 	fmatrix mat_cpy = fmatrix_copy_alloc(mat, frame);
 
-	int pivot_row;				// the row number of a located pivot
-	int check_row = 0;			// indicates which row to swap with the located pivot
-	int swap_col = -1;			// indicates index of a column where no pivot was located. If column is found to have a pivot, swap it with this one.
-	int rank = 0;				// counts the number of pivot columns
+	int pivot_row;					// the row number of a located pivot
+	int check_row = 0;				// indicates which row to swap with the located pivot
+	int swap_col = -1;				// indicates index of a column where no pivot was located. If column is found to have a pivot, swap it with this one.
+	int rank = 0;					// counts the number of pivot columns
 	float pivot_value, row_value;
 	//float pivot_value;
 
@@ -793,11 +795,28 @@ fmatrix fmatrix_col_space(fmatrix mat, pool* frame) {
 		swap_col++;										// increment which column to swap.
 	}
 
-	// allocate another fmatrix, then store the pivot columns inside it. 
+	// if the rank is 0 (mat is the 0 matrix), then return {0}
+	// The span of the columns of a 0 matrix is just 0
+	if (rank == 0) {
+		float zero[1][1] = {{0.0}};
+		fmatrix result = create_fmatrix(1, 1, zero, frame);
+		return result;
+	}
 
+	// allocate another fmatrix, then store the pivot columns inside it. 
 	fmatrix result = fmatrix_ncol_copy_alloc(mat_cpy, rank, frame);
 
-	
+	return result;
+}
 
+
+// row space of A is equal to the col space of the transpose of A
+// seems to fail when passed already transposed matrices
+fmatrix fmatrix_row_space(fmatrix mat, pool* frame) {
+	fmatrix_transpose_in(&mat);
+	fmatrix result = fmatrix_col_space(mat, frame);
+	fmatrix_transpose_in(&result);
+	//print_fmatrix(result);
+	fmatrix_transpose_in(&mat);
 	return result;
 }
