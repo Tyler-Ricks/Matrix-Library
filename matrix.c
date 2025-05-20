@@ -721,7 +721,7 @@ fmatrix fmatrix_col_space(fmatrix mat, pool* frame) {
 	fmatrix mat_cpy = fmatrix_copy_alloc(mat, frame);
 
 	int pivot_row;				// the row number of a located pivot
-	int check_row;				// indicates which row to swap with the located pivot
+	int check_row = 0;			// indicates which row to swap with the located pivot
 	int swap_col = -1;			// indicates index of a column where no pivot was located. If column is found to have a pivot, swap it with this one.
 	int rank = 0;				// counts the number of pivot columns
 	float pivot_value, row_value;
@@ -743,8 +743,11 @@ fmatrix fmatrix_col_space(fmatrix mat, pool* frame) {
 		for (int j = check_row + 1; j < mat_cpy.m; j++) {
 			row_value = MATRIX_AT(mat_cpy, j, i);
 			if (row_value == 0.0) { continue; } // if element is already 0, don't eliminate
-			fmatrix_row_sum_in(mat_cpy, j, pivot_value, pivot_row, row_value); // eliminate the element
+			fmatrix_row_sum_in(mat_cpy, j, pivot_value, pivot_row, -row_value); // eliminate the element
+			print_fmatrix(mat_cpy);
 		}
+
+		check_row++; // increment which row to check
 
 		// if a marked free column exists for swapping, swap with the located pivot
 		if(swap_col == -1) { continue; }
