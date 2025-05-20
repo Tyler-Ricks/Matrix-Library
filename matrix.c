@@ -687,9 +687,9 @@ fmatrix fmatrix_inverse(fmatrix mat, pool* frame) {
 		
 		// for each row, eliminate elements under the pivot
 		for (int j = 0; j < mat_copy.m; j++) {
-			if(i == j) { continue; } // don't eliminate the pivot
+			if(i == j) { continue; }								// don't eliminate the pivot
 			row_value = MATRIX_AT(mat_copy, j, i);
-			if(row_value == 0){ continue; } // no elimination necessary
+			if(row_value == 0){ continue; }							// no elimination necessary
 			fmatrix_row_sum_in(mat_copy, j, 1.0, i, -row_value);	// eliminate the element
 			fmatrix_row_sum_in(result,	 j, 1.0, i, -row_value);
 		}
@@ -703,6 +703,55 @@ fmatrix fmatrix_inverse(fmatrix mat, pool* frame) {
 	}
 
 	return(result);
+}
 
-	//return mat_copy;
+
+// functions for finding basis for the 4 spaces (row/column space, null/left null space)
+
+// finds and returns a basis for the column space of mat
+// uses gaussian elimination to find the pivot columns
+// as we iterate through columns, "organize" the matrix s.t:
+//	-pivot columns are on the left
+//	-free columns are on the right
+// If we track the number of pivot columns (rank), then we can edit the copy fmatrix to have the dimensions of the col space, then return it.
+// Does this work for input lazy transpose matrices? Work this out later, especially if you want to use this for row space implementation
+// We could even free up the memory stored after vectors in the col space, but we need to be very careful of lazily transposed input matrices.
+// For now, save the memory efficiency for later
+fmatrix fmatrix_col_space(fmatrix mat, pool* frame) {
+	fmatrix mat_cpy = fmatrix_copy_alloc(mat, frame);
+
+	int pivot_row;				// the row number of a located pivot
+	int check_row;				// indicates which row to swap with the located pivot
+	int swap_col = -1;			// indicates index of a column where no pivot was located. If column is found to have a pivot, swap it with this one.
+	int rank = 0;				// counts the number of pivot columns
+	float pivot_value, row_value;
+	//float pivot_value;
+
+	// iterate through each column. If a pivot is found, eliminate all values below it, then add the column to our column space. 
+	//  If not, check the next column for a pivot, without increasing the row at which to check for that pivot
+	for (int i = 0; i < mat_cpy.n; i++) {
+		pivot_row = find_pivot_row(mat_cpy, check_row, i);
+		if (pivot_row == -1) {						// if no pivot is found, then the column is not part of the col space
+			if(swap_col == -1) { swap_col = i; }	// if no free column has been marked for swapping, mark this one.
+			continue; 
+		} 
+
+		if (pivot_row != check_row) { fmatrix_row_swap_in(mat_cpy, pivot_row, check_row); }
+		pivot_value = MATRIX_AT(mat_cpy, check_row, i);
+
+		// eliminate all elements under the pivot
+		for (int j = check_row + 1; j < mat_cpy.m; j++) {
+			row_value = MATRIX_AT(mat_cpy, j, i);
+			if (row_value == 0.0) { continue; } // if element is already 0, don't eliminate
+			fmatrix_row_sum_in(mat_cpy, j, pivot_value, pivot_row, row_value); // eliminate the element
+		}
+
+		// if a marked free column exists for swapping, swap with the located pivot
+		if(swap_col == -1) { continue; }
+		
+		fmatrix_col_swap_in(mat_cpy, swap_col, i);		// swap the column
+		swap_col++;										// increment which column to swap.
+	}
+
+	return mat_cpy;
 }

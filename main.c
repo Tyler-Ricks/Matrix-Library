@@ -463,6 +463,15 @@ void test_inverse() {
 	}
 }
 
+void run_col_space(int r, int c, float* A) {
+	int count = 3; // one for the input, one for the copy of the input, and a third one for the inverse
+	pool frame = create_pool(count * r * c * sizeof(float));
+
+	if (frame.start == NULL) {
+		exit(1);
+	}
+}
+
 int main() {
 	switch(11){
 	case 1:
