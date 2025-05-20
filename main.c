@@ -464,20 +464,49 @@ void test_inverse() {
 }
 
 void run_col_space(int r, int c, float* A) {
-	int count = 2; // one for the input, one for the copy of the input
+	int count = 3; // one for the input, one for the copy of the input
 	pool frame = create_pool(count * r * c * sizeof(float));
 
 	if (frame.start == NULL) {
 		exit(1);
 	}
 
-	printf("matrix: \n");
+	printf("\nmatrix: \n");
 	fmatrix mat = create_fmatrix(r, c, A, &frame);
 	print_fmatrix(mat);
 
 	printf("result: \n");
 	fmatrix result = fmatrix_col_space(mat, &frame);
 	print_fmatrix(result);
+
+	printf("\n result as an array in memory:\n");
+	print_memory_layout(result);
+
+	free_pool(&frame);
+}
+
+void run_col_space_transpose(int r, int c, float* A) {
+	int count = 3; // one for the input, one for the copy of the input
+	pool frame = create_pool(count * r * c * sizeof(float));
+
+	if (frame.start == NULL) {
+		exit(1);
+	}
+
+	printf("\nmatrix: \n");
+	fmatrix mat = create_fmatrix(r, c, A, &frame);
+	print_fmatrix(mat);
+
+	printf("transpose: \n");
+	fmatrix_transpose_in(&mat);
+	print_fmatrix(mat);
+
+	printf("result: \n");
+	fmatrix result = fmatrix_col_space(mat, &frame);
+	print_fmatrix(result);
+
+	printf("\n result as an array in memory:\n");
+	print_memory_layout(result);
 
 	free_pool(&frame);
 }
@@ -486,10 +515,17 @@ void test_col_space() {
 	// test a basic invertible matrix
 	{
 		printf("testing invertible matrix:\n");
-		float A[3][3] = {{3.0, 2.0, 1.0},
-			{-1.0, 0.0, 5.0},
-			{2.0, 2.0, 2.0}};
-		run_col_space(3, 3, A);
+		float A[3][4] = {{ 3.0, 2.0, 1.0, 5.0},
+						 {-1.0, 0.0, 5.0, 4.0},
+						 { 2.0, 2.0, 2.0, 6.0}};
+		run_col_space(3, 4, A);
+
+		float B[3][4] = {	{ 3.0, 2.0, 5.0, 1.0},
+							{-1.0, 0.0, 4.0, 5.0},
+							{ 2.0, 2.0, 6.0, 2.0}};
+		run_col_space(3, 4, A);
+
+		run_col_space_transpose(3, 4, B);
 	}
 }
 

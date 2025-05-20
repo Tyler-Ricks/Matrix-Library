@@ -75,7 +75,9 @@ void print_fpool(pool *frame);
 
 void print_properties(fmatrix mat);
 void print_as_array(fmatrix mat);
+void print_memory_layout(fmatrix mat);
 fmatrix fmatrix_copy_alloc(fmatrix mat, pool *frame);
+fmatrix fmatrix_ncol_copy_alloc(fmatrix mat, int c, pool* frame);
 
 void fswap(float *a, float *b);
 void intswap(int *a, int *b);

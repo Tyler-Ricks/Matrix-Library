@@ -110,6 +110,16 @@ void print_as_array(fmatrix mat) {
 	printf("\n");
 }
 
+void print_memory_layout(fmatrix mat) {
+	int size = mat.m * mat.n;
+
+	for (int i = 0; i < size; i++) {
+		printf("%f ", mat.matrix[i]);
+	}
+
+	printf("\n");
+}
+
 // takes an exisitng matrix, allocates space for a clone, copies its properties, and returns a deep copy
 // used to reduce how verbose non inplace functions are, because many of them shared this procedure 
 //
@@ -126,6 +136,30 @@ fmatrix fmatrix_copy_alloc(fmatrix mat, pool* frame) {
 	memcpy(result, mat.matrix, size);
 
 	return (fmatrix) { mat.m, mat.n, result, mat.transpose};
+}
+
+// takes an exisitng fmatrix and a number of columns to copy, then creates a new fmatrix with 
+// the first c columns of mat, allocated on frame
+// for now, it does not retain mat's transpose state
+fmatrix fmatrix_ncol_copy_alloc(fmatrix mat, int c, pool* frame) {
+	int size = mat.m * c;
+	float* result = (float*)raw_pool_alloc(frame, size * sizeof(float));
+
+	if (result  == NULL) {
+		printf("error while allocating matrix\n");
+		return ERROR_FMATRIX;
+	}
+
+	int offset; // for accessing result array linearly from a nested for loop
+	for (int i = 0; i < mat.m; i++) {
+		offset = i * c;
+		for (int j = 0; j < c; j++) {
+			result[offset + j] = MATRIX_AT(mat, i, j);
+			//result[offset + j] = mat.transpose ?  MATRIX_AT(mat, j, i) : MATRIX_AT(mat, i, j);
+		}
+	}
+
+	return (fmatrix) { mat.m, c, result, 0};
 }
 
 // swaps the values of floats located at a and b
@@ -713,10 +747,12 @@ fmatrix fmatrix_inverse(fmatrix mat, pool* frame) {
 // as we iterate through columns, "organize" the matrix s.t:
 //	-pivot columns are on the left
 //	-free columns are on the right
-// If we track the number of pivot columns (rank), then we can edit the copy fmatrix to have the dimensions of the col space, then return it.
-// Does this work for input lazy transpose matrices? Work this out later, especially if you want to use this for row space implementation
-// We could even free up the memory stored after vectors in the col space, but we need to be very careful of lazily transposed input matrices.
-// For now, save the memory efficiency for later
+// The goal is to then edit the copied matrix to only include the vectors that form a basis for the null space
+// However, even if I swap free columns to the right, they show up in memory in row major order. 
+// So, I can't just use pool_free_from starting from the first free column.
+// I could potentially write a proper in place transpose function, then use free from, then edit the fmatrix dimensions, then transpose back
+// But there could be an easier and more efficient way
+// For now, I am allocating another fmatrix on the pool, putting the pivot columns into it, then returning that
 fmatrix fmatrix_col_space(fmatrix mat, pool* frame) {
 	fmatrix mat_cpy = fmatrix_copy_alloc(mat, frame);
 
@@ -744,10 +780,11 @@ fmatrix fmatrix_col_space(fmatrix mat, pool* frame) {
 			row_value = MATRIX_AT(mat_cpy, j, i);
 			if (row_value == 0.0) { continue; } // if element is already 0, don't eliminate
 			fmatrix_row_sum_in(mat_cpy, j, pivot_value, pivot_row, -row_value); // eliminate the element
-			print_fmatrix(mat_cpy);
+			//print_fmatrix(mat_cpy);
 		}
 
-		check_row++; // increment which row to check
+		check_row++;	// increment which row to check for pivots
+		rank++;			// another free column has been found, so increase the rank.
 
 		// if a marked free column exists for swapping, swap with the located pivot
 		if(swap_col == -1) { continue; }
@@ -756,5 +793,11 @@ fmatrix fmatrix_col_space(fmatrix mat, pool* frame) {
 		swap_col++;										// increment which column to swap.
 	}
 
-	return mat_cpy;
+	// allocate another fmatrix, then store the pivot columns inside it. 
+
+	fmatrix result = fmatrix_ncol_copy_alloc(mat_cpy, rank, frame);
+
+	
+
+	return result;
 }
