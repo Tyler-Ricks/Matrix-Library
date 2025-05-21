@@ -621,18 +621,18 @@ void test_row_space() {
 			{ 2.0, 2.0, 6.0, 2.0}};
 		run_row_space(3, 4, B);
 
-		run_col_space_transpose(3, 4, B);
+		run_row_space_transpose(3, 4, B);
 	}
 
 	// test a non invertible matrix that requires 2 col swaps
 	{
 		printf("\ntesting multiple swaps and transpose:\n");
-		float B[3][5] = {	{ 3.0, 2.0, 5.0, 0.0, 1.0},
+		float B[3][5] = {{ 3.0, 2.0, 5.0, 0.0, 1.0},
 			{-1.0, 0.0, 4.0, 0.0, 5.0},
 			{ 2.0, 2.0, 6.0, 0.0, 2.0}};
 		run_row_space(3, 5, B);
 
-		run_col_space_transpose(3, 5, B);
+		run_row_space_transpose(3, 5, B);
 	}
 
 	// test the 0 matrix
@@ -643,7 +643,7 @@ void test_row_space() {
 			{0.0, 0.0, 0.0},
 			{0.0, 0.0, 0.0}};
 		run_row_space(4, 3, C);
-		run_col_space_transpose(4, 3, C);
+		run_row_space_transpose(4, 3, C);
 	}
 }
 
