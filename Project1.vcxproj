@@ -23,12 +23,14 @@
     <ClCompile Include="matrix.c" />
     <ClCompile Include="memoryPool.c" />
     <ClCompile Include="testing.c" />
+    <ClCompile Include="tuple.c" />
     <ClCompile Include="vector.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="matrix.h" />
     <ClInclude Include="memoryPool.h" />
     <ClInclude Include="testing.h" />
+    <ClInclude Include="tuple.h" />
     <ClInclude Include="vector.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

@@ -30,6 +30,9 @@
     <ClCompile Include="testing.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="tuple.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vector.h">
@@ -42,6 +45,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="testing.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tuple.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

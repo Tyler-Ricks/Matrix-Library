@@ -464,11 +464,11 @@ fmatrix fmatrix_row_swap(fmatrix mat, int row1, int row2, pool *frame) {
 // fmatrix_row_sum_in(A, 0, 3, 1, 0.5) // R1 <- 3R1 + 0.5R2
 void fmatrix_row_sum_in(fmatrix mat, int dest, float c1, int src, float c2) {
 	if (dest >= mat.m || dest < 0) {
-		printf("row_sum error: \dest row %d out of bounds (make sure you are 0-indexed)\n", dest);
+		printf("row_sum error: dest row %d out of bounds (make sure you are 0-indexed)\n", dest);
 		return;
 	}
 	if (src >= mat.m || src < 0) {
-		printf("row_sum error: \src row %d out of bounds (make sure you are 0-indexed)\n", src);
+		printf("row_sum error: src row %d out of bounds (make sure you are 0-indexed)\n", src);
 		return;
 	}
 
@@ -485,11 +485,11 @@ void fmatrix_row_sum_in(fmatrix mat, int dest, float c1, int src, float c2) {
 // fmatrix A2 = fmatrix_row_sum(A, 0, 3, 1, 0.5) // R1 <- 3R1 + 0.5R2
 fmatrix fmatrix_row_sum(fmatrix mat, int dest, float c1, int src, float c2, pool* frame) {
 	if (dest >= mat.m || dest < 0) {
-		printf("row_sum error: \dest row %d out of bounds (make sure you are 0-indexed)\n", dest);
+		printf("row_sum error: dest row %d out of bounds (make sure you are 0-indexed)\n", dest);
 		return (fmatrix){ 0, 0, NULL};
 	}
 	if (src >= mat.m || src < 0) {
-		printf("row_sum error: \src row %d out of bounds (make sure you are 0-indexed)\n", src);
+		printf("row_sum error: src row %d out of bounds (make sure you are 0-indexed)\n", src);
 		return (fmatrix){ 0, 0, NULL};
 	}
 
@@ -567,11 +567,11 @@ fmatrix fmatrix_col_swap(fmatrix mat, int col1, int col2, pool* frame) {
 
 void fmatrix_col_sum_in(fmatrix mat, int dest, float c1, int src, float c2) {
 	if (dest >= mat.m || dest < 0) {
-		printf("col_sum error: \dest col %d out of bounds (make sure you are 0-indexed)\n", dest);
+		printf("col_sum error: \ndest col %d out of bounds (make sure you are 0-indexed)\n", dest);
 		return;
 	}
 	if (src >= mat.m || src < 0) {
-		printf("col_sum error: \src col %d out of bounds (make sure you are 0-indexed)\n", src);
+		printf("col_sum error: \nsrc col %d out of bounds (make sure you are 0-indexed)\n", src);
 		return;
 	}
 
@@ -582,11 +582,11 @@ void fmatrix_col_sum_in(fmatrix mat, int dest, float c1, int src, float c2) {
 
 fmatrix fmatrix_col_sum(fmatrix mat, int dest, float c1, int src, float c2, pool *frame) {
 	if (dest >= mat.m || dest < 0) {
-		printf("col_sum error: dest col %d out of bounds (make sure you are 0-indexed)\n", dest);
+		printf("col_sum error: \ndest col %d out of bounds (make sure you are 0-indexed)\n", dest);
 		return;
 	}
 	if (src >= mat.m || src < 0) {
-		printf("col_sum error: src col %d out of bounds (make sure you are 0-indexed)\n", src);
+		printf("col_sum error: \nsrc col %d out of bounds (make sure you are 0-indexed)\n", src);
 		return;
 	}
 
@@ -816,4 +816,67 @@ fmatrix fmatrix_row_space(fmatrix mat, pool* frame) {
 	//print_fmatrix(result);
 	fmatrix_transpose_in(&mat);
 	return result;
+}
+
+
+// Factorizations and Decompositions
+// These functions take in a matrix input, but need to return multiple matrices that make up the respective factorization/decompositon
+// Each factorization has a defined number of matrices that make up its factorization, so for now, convention is to simply return an array of fmatrix pointers
+
+
+// Technically, this function does PLU factorization
+// A = PLU such that L is lower triangular, U is upper triangular, and P is a partial pivot matrix
+// A partial pivot matrix is simply an identity matrix that has undergone row swaps. In this case, the row swaps we do correspond to the row
+// swaps required to get A to be able to be row reduced to an upper triangular matrix. For matrices that need no row swaps, P is just identity
+// 
+// This function takes in mat, and returns an array of fmatrix pointers, with the first one being P, the second being L and the third being U
+// Works for matrices that require partial pivoting, but not non-square matrices for now
+// In the case that no LU factorization exists, (mat is "rank-deficient") free data from pool starting from U.matrix, then return NULL.
+// For now
+fmatrix* fmatrix_LU_factorize(fmatrix mat, pool* frame) {
+	if (mat.m != mat.n) { return NULL; } // does not handle rectangular matrices for now
+
+	// initialize P, L, and U
+	fmatrix P, L, U;
+	// A: (m x n), so PLU: (m x m) * (m x n) * (m x n)
+	// oh man you need to figure this stuff out that's not good
+	if((P = fmatrix_create_identity(mat.m, mat.n, frame)).matrix == NULL){ return NULL; }
+	if((L = fmatrix_create_identity(mat.m, mat.n, frame)).matrix == NULL){ return NULL; }
+	if((U = fmatrix_copy_alloc(mat, frame)).matrix == NULL){ return NULL; }
+
+	// row reduce U into an upper triangular matrix
+	int pivot_row;
+	float pivot_value;
+	for (int i = 0; i < U.n; i++) {
+		pivot_row = find_pivot_row(U, i, i);
+		if (pivot_row == -1) { // if no pivot row is found, mat is rank-deficient
+			pool_free_from(frame, P.matrix);
+			return NULL;
+		}
+		if (pivot_row != i) { // pivot row is found, but requires a pivot (row swap)
+			fmatrix_row_swap_in(U, i, pivot_row);
+			fmatrix_row_swap_in(P, i, pivot_row);
+		}
+		pivot_value = MATRIX_AT(U, i, i);
+
+		// eliminate lower elements
+		for (int j = i + 1; j < U.m; j++) {
+			float row_value = MATRIX_AT(U, j, i);
+			if(row_value == 0){ continue; } 
+
+			float k = (row_value / pivot_value);
+			fmatrix_row_sum_in(U, j, 1, i, -k);
+			L.matrix[INDEX_AT(L, j, i)] = k;
+		}
+	}
+	printf("P:\n");
+	print_fmatrix(P);
+	printf("\nL:\n");
+	print_fmatrix(L);
+	printf("\nU:\n");
+	print_fmatrix(U);
+	printf("\nA = PLU:\n");
+	print_fmatrix(fmatrix_multiply(P, fmatrix_multiply(L, U, frame), frame));
+
+	return NULL;
 }

@@ -647,8 +647,44 @@ void test_row_space() {
 	}
 }
 
+void run_LU(int r, int c, float* A) {
+	int count = 6; // one for the input, one for each of PLU, then two extra temporary for multiplication test
+	pool frame = create_pool(count * r * c * sizeof(float));
+
+	if (frame.start == NULL) {
+		exit(1);
+	}
+
+	printf("\nmatrix: \n");
+	fmatrix mat = create_fmatrix(r, c, A, &frame);
+	print_fmatrix(mat);
+
+	fmatrix_LU_factorize(mat, &frame);
+
+	free_pool(&frame);
+}
+
+void test_LU() {
+	// test a basic invertible matrix
+	{
+		printf("testing invertible matrix:\n");
+		float A[2][2] = {{ 3.0, 2.0},
+			{7.0, 4.0}};
+		run_LU(2, 2, A);
+	}
+
+	// test an invertible matrix that requires a pivot
+	{
+		printf("testing a pivoting matrix:\n");
+		float A[3][3] = {{ 0.0, 2.0, 1.0},
+			{1.0, 1.0, 0.0}, 
+			{2.0, 1.0, 1.0}};
+		run_LU(3, 3, A);
+	}
+}
+
 int main() {
-	switch(13){
+	switch(14){
 	case 1:
 		test_transpose();
 		break;
@@ -687,6 +723,9 @@ int main() {
 		break;
 	case 13:
 		test_row_space();
+		break;
+	case 14:
+		test_LU();
 		break;
 	default:
 		printf("no tests\n");
