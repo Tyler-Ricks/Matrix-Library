@@ -835,13 +835,16 @@ fmatrix fmatrix_row_space(fmatrix mat, pool* frame) {
 // This function takes in mat, and populates an fmatrix array, with the first element being P, the second being L and the third being U
 // Works for matrices that require partial pivoting, but not non-square matrices FOR NOW
 // In the case that no LU factorization exists, (mat is "rank-deficient") free data from pool starting from U.matrix, then return NULL.
+// Usage: This one requires you to pass in a declared fmatrix array:
+// fmatrix PLU[3];
+// if(fmatrix_LU_factorize(A, PLU, &frame) == NULL){
+//     printf("LU factorization for A does not exist");
+// }
 fmatrix* fmatrix_LU_factorize(fmatrix mat, fmatrix PLU[3], pool* frame) {
 	if (mat.m != mat.n) { return NULL; } // does not handle rectangular matrices for now
 
 	// initialize P, L, and U
 	fmatrix P, L, U;
-	// A: (m x n), so PLU: (m x m) * (m x n) * (m x n)
-	// oh man you need to figure this stuff out that's not good
 	if((P = fmatrix_create_identity(mat.m, mat.n, frame)).matrix == NULL){ return NULL; }
 	if((L = fmatrix_create_identity(mat.m, mat.n, frame)).matrix == NULL){ return NULL; }
 	if((U = fmatrix_copy_alloc(mat, frame)).matrix == NULL){ return NULL; }
@@ -851,13 +854,13 @@ fmatrix* fmatrix_LU_factorize(fmatrix mat, fmatrix PLU[3], pool* frame) {
 	float pivot_value;
 	for (int i = 0; i < U.n; i++) {
 		pivot_row = find_pivot_row(U, i, i);
-		if (pivot_row == -1) { // if no pivot row is found, mat is rank-deficient
+		if (pivot_row == -1) {						// if no pivot row is found, mat is rank-deficient
 			pool_free_from(frame, P.matrix);
 			return NULL;
 		}
-		if (pivot_row != i) { // pivot row is found, but requires a pivot (row swap)
+		if (pivot_row != i) {						// pivot row is found, but requires a pivot (row swap)
 			fmatrix_row_swap_in(U, i, pivot_row);
-			fmatrix_row_swap_in(P, i, pivot_row);
+			fmatrix_row_swap_in(P, i, pivot_row);	// track row swaps in the permutation/pivot matrix P
 		}
 		pivot_value = MATRIX_AT(U, i, i);
 
@@ -868,10 +871,10 @@ fmatrix* fmatrix_LU_factorize(fmatrix mat, fmatrix PLU[3], pool* frame) {
 
 			float k = (row_value / pivot_value);
 			fmatrix_row_sum_in(U, j, 1, i, -k);
-			L.matrix[INDEX_AT(L, j, i)] = k;
+			L.matrix[INDEX_AT(L, j, i)] = k;		// track eliminations in L
 		}
 	}
-
+	// populate the passed in array
 	PLU[0] = P;
 	PLU[1] = L;
 	PLU[2] = U;

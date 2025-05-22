@@ -659,6 +659,10 @@ void run_LU(int r, int c, float* A) {
 	fmatrix mat = create_fmatrix(r, c, A, &frame);
 	print_fmatrix(mat);
 
+	printf("transpose:\n");
+	fmatrix_transpose_in(&mat);
+	print_fmatrix(mat);
+
 	fmatrix PLU[3];
 	if (fmatrix_LU_factorize(mat, PLU, &frame) == NULL) {
 		printf("LU factorization for this matrix does not exist!\n");
