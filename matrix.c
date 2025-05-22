@@ -939,23 +939,65 @@ fmatrix fmatrix_LU_solve(fmatrix A, fmatrix b, pool* frame) {
 	// for now, just return, but in the future actually handle the case
 	fmatrix PLU[3];
 	if (fmatrix_LU_factorize(A, PLU, frame) == NULL) { return A; }
+	fmatrix P = PLU[0];
+	fmatrix L = PLU[1];
+	fmatrix U = PLU[2];
 
 	// allocate space for x and y, but do x first so we can free up y at the end
 	fmatrix x = fmatrix_create_zero(A.m, 1, frame);
-	if (x.matrix == NULL) { return ERROR_FMATRIX; }
+	if (x.matrix == NULL) {return ERROR_FMATRIX; }
 	fmatrix y = fmatrix_create_zero(A.m, 1, frame);
 	if (y.matrix == NULL) { 
 		pool_free_from(frame, x.matrix);
 		return ERROR_FMATRIX; 
 	}
 
-	// Ly = b
-	for (int r = 0; r < A.m; r++) {
+	// also allocate a copy of p, so we can permute it (LUx = Pb)
+	// I wonder if we can do this lazily, just by accessing the correct element of b
+	//fmatrix_transpose_in(&P);
+	/*print_fmatrix(fmatrix_multiply(L, U, frame));
+	printf("P:\n");
+	print_fmatrix(P);*/
+	fmatrix Pb = fmatrix_multiply(P, b, frame);
+	//fmatrix Pb = fmatrix_copy_alloc(b, frame);
+
+	/*printf("\nL\n");
+	print_fmatrix(L);
+	printf("\nU\n");
+	print_fmatrix(U);
+	printf("\nPb\n");
+	print_fmatrix(Pb);*/
+
+	// Ly = Pb, solve for y
+	for (int r = 0; r < L.m; r++) {
 		// iterate through the current row until you reach the diagonal 
-		float b_r = b.matrix[r]; // use elements of b to determine corresponding elements of y
-		for (int c = 0; c < r - 1; c++) {
-			b_r -= (y.matrix[c] * MATRIX_AT(A, r, c));
+		float b_r = Pb.matrix[r]; // use elements of b to determine corresponding elements of y
+		for (int c = 0; c < r; c++) {
+			b_r -= (y.matrix[c] * MATRIX_AT(L, r, c));
+			//printf("uh: %f * %f = %f\n", y.matrix[c], MATRIX_AT(L, r, c), y.matrix[c] * MATRIX_AT(L, r, c));
 		}
 		y.matrix[r] = b_r; // For now, diagonal elements of L are 1.0. Make sure to change this line if that changes
 	}
+
+	//printf("\ntest y:\n");
+	//print_fmatrix(y);
+
+	// Ux = y, solve for x (iterate from the bottom)
+	for (int r = U.m - 1; r >= 0; r--) {
+		// iterate backwards through the current row until you reach the diagonal 
+		float y_r = y.matrix[r]; // use elements of y to determine corresponding elements of x
+		for (int c = U.n - 1; c > r; c--) {
+			y_r -= (x.matrix[c] * MATRIX_AT(U, r, c));
+			//printf("uh: %f * %f = %f\n", y.matrix[c], MATRIX_AT(L, r, c), y.matrix[c] * MATRIX_AT(L, r, c));
+		}
+		x.matrix[r] = y_r / MATRIX_AT(U, r, r); 
+	}
+
+	/*printf("\ntest x:\n");
+	print_fmatrix(x);*/
+
+	// free up y, which won't be used anymore
+	pool_free_from(frame, y.matrix);
+
+	return x;
 }

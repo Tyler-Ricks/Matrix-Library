@@ -463,7 +463,7 @@ void test_inverse() {
 	}
 }
 
-void run_col_space(int r, int c, float** A) {
+void run_col_space(int r, int c, float* A) {
 	int count = 3; // one for the input, one for the copy of the input
 	pool frame = create_pool(count * r * c * sizeof(float));
 
@@ -485,7 +485,7 @@ void run_col_space(int r, int c, float** A) {
 	free_pool(&frame);
 }
 
-void run_col_space_transpose(int r, int c, float** A) {
+void run_col_space_transpose(int r, int c, float* A) {
 	int count = 3; // one for the input, one for the copy of the input
 	pool frame = create_pool(count * r * c * sizeof(float));
 
@@ -555,7 +555,7 @@ void test_col_space() {
 	}
 }
 
-void run_row_space(int r, int c, float** A) {
+void run_row_space(int r, int c, float* A) {
 	int count = 3; // one for the input, one for the copy of the input, one for the result
 	pool frame = create_pool(count * r * c * sizeof(float));
 
@@ -577,7 +577,7 @@ void run_row_space(int r, int c, float** A) {
 	free_pool(&frame);
 }
 
-void run_row_space_transpose(int r, int c, float** A) {
+void run_row_space_transpose(int r, int c, float* A) {
 	int count = 3; // one for the input, one for the copy of the input
 	pool frame = create_pool(count * r * c * sizeof(float));
 
@@ -647,7 +647,7 @@ void test_row_space() {
 	}
 }
 
-void run_LU(int r, int c, float** A) {
+void run_LU(int r, int c, float* A) {
 	int count = 6; // one for the input, one for each of PLU, then two extra temporary for multiplication test
 	pool frame = create_pool(count * r * c * sizeof(float));
 
@@ -719,8 +719,58 @@ void test_LU() {
 	}
 }
 
+void run_LU_solve(int r, int c, float* A, float* b) {
+	int countmm = 4; // 1 for A, 3 for PLU 
+	int countm1 = 5; // 1 for b, 2 for x and y, 1 for Pb, 1 for testing Ax, 1 for result
+	pool frame = create_pool((countmm * r * c + countm1 * c) * sizeof(float));
+
+	if (frame.start == NULL) {
+		exit(1);
+	}
+
+	printf("\nA: \n");
+	fmatrix mat = create_fmatrix(r, c, A, &frame);
+	print_fmatrix(mat);
+
+	printf("\nb: \n");
+	fmatrix vec = create_fmatrix(c, 1, b, &frame);
+	print_fmatrix(vec);
+
+	fmatrix x = fmatrix_LU_solve(mat, vec, &frame);
+
+	printf("\nx: \n");
+	print_fmatrix(x);
+
+	printf("test Ax = b:\n");
+	print_fmatrix(fmatrix_multiply(mat, x, &frame));
+
+	free_pool(&frame);
+}
+
+test_LU_solve() {
+	// test a basic matrix and vector
+	/*{
+		printf("testing normal matrix:\n");
+		float A[3][3] = {{1.0f, -3.0f, 0.0f}, 
+			{0.0f, 1.0f, 3.0f}, 
+			{2.0f, -10.0f, 2.0f}};
+		float b[3][1] = {-5.0f, -1.0f, -20.0f};
+		run_LU_solve(3, 3, A, b);
+	}*/
+
+	// test a matrix that requires permutations
+	{
+		printf("testing matrix that requires permutation:\n");
+		float A[3][3] = {{0.0f, 1.0f, 3.0f}, 
+			{2.0f, -10.0f, 2.0f}, 
+			{1.0f, -3.0f, 0.0f}};
+		float b[3][1] = {-1.0f, -20.0f, -5.0};
+		run_LU_solve(3, 3, A, b);
+	}
+}
+
 int main() {
-	switch(14){
+	switch(15){
 	case 1:
 		test_transpose();
 		break;
@@ -762,6 +812,9 @@ int main() {
 		break;
 	case 14:
 		test_LU();
+		break;
+	case 15:
+		test_LU_solve();
 		break;
 	default:
 		printf("no tests\n");

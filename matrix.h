@@ -122,5 +122,6 @@ fmatrix fmatrix_col_space(fmatrix mat, pool* frame);
 fmatrix fmatrix_row_space(fmatrix mat, pool* frame);
 
 fmatrix* fmatrix_LU_factorize(fmatrix mat, fmatrix result[3], pool* frame);
+fmatrix fmatrix_LU_solve(fmatrix A, fmatrix b, pool* frame);
 
 #endif MATRIX_H
