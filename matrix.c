@@ -879,5 +879,5 @@ fmatrix* fmatrix_LU_factorize(fmatrix mat, fmatrix PLU[3], pool* frame) {
 	PLU[1] = L;
 	PLU[2] = U;
 
-	return 1;
+	return PLU;
 }

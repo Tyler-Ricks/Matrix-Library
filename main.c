@@ -657,6 +657,8 @@ void run_LU(int r, int c, float* A) {
 
 	printf("\nmatrix: \n");
 	fmatrix mat = create_fmatrix(r, c, A, &frame);
+
+	printf("frame pointer offset before: %d\n", (char*)frame.ptr - (char*)frame.start);
 	print_fmatrix(mat);
 
 	printf("transpose:\n");
@@ -666,9 +668,12 @@ void run_LU(int r, int c, float* A) {
 	fmatrix PLU[3];
 	if (fmatrix_LU_factorize(mat, PLU, &frame) == NULL) {
 		printf("LU factorization for this matrix does not exist!\n");
+		printf("frame pointer offset after: %d\n", (char*)frame.ptr - (char*)frame.start);
 		free_pool(&frame);
 		return;
 	}
+
+	printf("frame pointer offset after: %d\n", (char*)frame.ptr - (char*)frame.start);
 
 	printf("P:\n");
 	print_fmatrix(PLU[0]);
