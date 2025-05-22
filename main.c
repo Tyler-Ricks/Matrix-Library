@@ -431,7 +431,7 @@ void run_transpose_inverse(int r, int c, float* mat) {
 void test_inverse() {
 	// test transpose for each case as well
 
-	// test a basic matrix
+	// test a basic invertible matrix
 	{
 		printf("testing invertible matrix:\n");
 		float A[3][3] = {{3.0, 2.0, 1.0},
@@ -463,8 +463,263 @@ void test_inverse() {
 	}
 }
 
+void run_col_space(int r, int c, float* A) {
+	int count = 3; // one for the input, one for the copy of the input
+	pool frame = create_pool(count * r * c * sizeof(float));
+
+	if (frame.start == NULL) {
+		exit(1);
+	}
+
+	printf("\nmatrix: \n");
+	fmatrix mat = create_fmatrix(r, c, A, &frame);
+	print_fmatrix(mat);
+
+	printf("result: \n");
+	fmatrix result = fmatrix_col_space(mat, &frame);
+	print_fmatrix(result);
+
+	printf("\n result as an array in memory:\n");
+	print_memory_layout(result);
+
+	free_pool(&frame);
+}
+
+void run_col_space_transpose(int r, int c, float* A) {
+	int count = 3; // one for the input, one for the copy of the input
+	pool frame = create_pool(count * r * c * sizeof(float));
+
+	if (frame.start == NULL) {
+		exit(1);
+	}
+
+	printf("\nmatrix: \n");
+	fmatrix mat = create_fmatrix(r, c, A, &frame);
+	print_fmatrix(mat);
+
+	printf("transpose: \n");
+	fmatrix_transpose_in(&mat);
+	print_fmatrix(mat);
+
+	printf("result: \n");
+	fmatrix result = fmatrix_col_space(mat, &frame);
+	print_fmatrix(result);
+
+	printf("\n result as an array in memory:\n");
+	print_memory_layout(result);
+
+	free_pool(&frame);
+}
+
+void test_col_space() {
+	// test a basic invertible matrix
+	{
+		printf("testing invertible matrix:\n");
+		float A[3][3] = {{ 3.0, 2.0, 1.0},
+						 {-1.0, 0.0, 5.0},
+						 { 2.0, 2.0, 2.0}};
+		run_col_space(3, 3, A);
+	}
+
+	// test a non invertible matrix
+	{
+		printf("\ntesting non invertible matrix and its transpose:\n");
+		float B[3][4] = {	{ 3.0, 2.0, 5.0, 1.0},
+							{-1.0, 0.0, 4.0, 5.0},
+							{ 2.0, 2.0, 6.0, 2.0}};
+		run_col_space(3, 4, B);
+
+		run_col_space_transpose(3, 4, B);
+	}
+
+	// test a non invertible matrix that requires 2 col swaps
+	{
+		printf("\ntesting multiple swaps and transpose:\n");
+		float B[3][5] = {	{ 3.0, 2.0, 5.0, 0.0, 1.0},
+							{-1.0, 0.0, 4.0, 0.0, 5.0},
+							{ 2.0, 2.0, 6.0, 0.0, 2.0}};
+		run_col_space(3, 5, B);
+
+		run_col_space_transpose(3, 5, B);
+	}
+
+	// test the 0 matrix
+	{
+		printf("\ntesting a 0 matrix\n");
+		float C[4][3] = {{0.0, 0.0, 0.0},
+						 {0.0, 0.0, 0.0},
+						 {0.0, 0.0, 0.0},
+						 {0.0, 0.0, 0.0}};
+		run_col_space(4, 3, C);
+		run_col_space_transpose(4, 3, C);
+	}
+}
+
+void run_row_space(int r, int c, float* A) {
+	int count = 3; // one for the input, one for the copy of the input, one for the result
+	pool frame = create_pool(count * r * c * sizeof(float));
+
+	if (frame.start == NULL) {
+		exit(1);
+	}
+
+	printf("\nmatrix: \n");
+	fmatrix mat = create_fmatrix(r, c, A, &frame);
+	print_fmatrix(mat);
+
+	printf("result: \n");
+	fmatrix result = fmatrix_row_space(mat, &frame);
+	print_fmatrix(result);
+
+	printf("\n result as an array in memory:\n");
+	print_memory_layout(result);
+
+	free_pool(&frame);
+}
+
+void run_row_space_transpose(int r, int c, float* A) {
+	int count = 3; // one for the input, one for the copy of the input
+	pool frame = create_pool(count * r * c * sizeof(float));
+
+	if (frame.start == NULL) {
+		exit(1);
+	}
+
+	printf("\nmatrix: \n");
+	fmatrix mat = create_fmatrix(r, c, A, &frame);
+	print_fmatrix(mat);
+
+	printf("transpose: \n");
+	fmatrix_transpose_in(&mat);
+	print_fmatrix(mat);
+
+	printf("result: \n");
+	fmatrix result = fmatrix_row_space(mat, &frame);
+	print_fmatrix(result);
+
+	printf("\n result as an array in memory:\n");
+	print_memory_layout(result);
+
+	free_pool(&frame);
+}
+
+void test_row_space() {
+	// test a basic invertible matrix
+	{
+		printf("testing invertible matrix:\n");
+		float A[3][3] = {{ 3.0, 2.0, 1.0},
+			{-1.0, 0.0, 5.0},
+			{ 2.0, 2.0, 2.0}};
+		run_row_space(3, 3, A);
+	}
+
+	// test a non invertible matrix
+	{
+		printf("\ntesting non invertible matrix and its transpose:\n");
+		float B[3][4] = {	{ 3.0, 2.0, 5.0, 1.0},
+			{-1.0, 0.0, 4.0, 5.0},
+			{ 2.0, 2.0, 6.0, 2.0}};
+		run_row_space(3, 4, B);
+
+		run_row_space_transpose(3, 4, B);
+	}
+
+	// test a non invertible matrix that requires 2 col swaps
+	{
+		printf("\ntesting multiple swaps and transpose:\n");
+		float B[3][5] = {{ 3.0, 2.0, 5.0, 0.0, 1.0},
+			{-1.0, 0.0, 4.0, 0.0, 5.0},
+			{ 2.0, 2.0, 6.0, 0.0, 2.0}};
+		run_row_space(3, 5, B);
+
+		run_row_space_transpose(3, 5, B);
+	}
+
+	// test the 0 matrix
+	{
+		printf("\ntesting a 0 matrix\n");
+		float C[4][3] = {{0.0, 0.0, 0.0},
+			{0.0, 0.0, 0.0},
+			{0.0, 0.0, 0.0},
+			{0.0, 0.0, 0.0}};
+		run_row_space(4, 3, C);
+		run_row_space_transpose(4, 3, C);
+	}
+}
+
+void run_LU(int r, int c, float* A) {
+	int count = 6; // one for the input, one for each of PLU, then two extra temporary for multiplication test
+	pool frame = create_pool(count * r * c * sizeof(float));
+
+	if (frame.start == NULL) {
+		exit(1);
+	}
+
+	printf("\nmatrix: \n");
+	fmatrix mat = create_fmatrix(r, c, A, &frame);
+
+	printf("frame pointer offset before: %d\n", (char*)frame.ptr - (char*)frame.start);
+	print_fmatrix(mat);
+
+	printf("transpose:\n");
+	fmatrix_transpose_in(&mat);
+	print_fmatrix(mat);
+
+	fmatrix PLU[3];
+	if (fmatrix_LU_factorize(mat, PLU, &frame) == NULL) {
+		printf("LU factorization for this matrix does not exist!\n");
+		printf("frame pointer offset after: %d\n", (char*)frame.ptr - (char*)frame.start);
+		free_pool(&frame);
+		return;
+	}
+
+	printf("frame pointer offset after: %d\n", (char*)frame.ptr - (char*)frame.start);
+
+	printf("P:\n");
+	print_fmatrix(PLU[0]);
+	//printf("%d\n", PLU[0].m);
+	printf("\nL:\n");
+	print_fmatrix(PLU[1]);
+	//printf("%d\n", PLU[1].m);
+	printf("\nU:\n");
+	print_fmatrix(PLU[2]);
+
+	printf("\nA = PLU:\n");
+	print_fmatrix(fmatrix_multiply(PLU[0], fmatrix_multiply(PLU[1], PLU[2], &frame), &frame));
+
+	free_pool(&frame);
+}
+
+void test_LU() {
+	// test a basic invertible matrix
+	{
+		printf("testing invertible matrix:\n");
+		float A[2][2] = {{ 3.0, 2.0},
+			{7.0, 4.0}};
+		run_LU(2, 2, A);
+	}
+
+	// test an invertible matrix that requires a pivot
+	{
+		printf("testing a pivoting matrix:\n");
+		float A[3][3] = {{ 0.0, 2.0, 1.0},
+			{1.0, 1.0, 0.0}, 
+			{2.0, 1.0, 1.0}};
+		run_LU(3, 3, A);
+	}
+
+	// test a rank-deficient matrix (has no LU factorization)
+	{
+		printf("testing rank deficient matrix:\n");
+		float A[3][3] = {{ 0.0, 2.0, 1.0},
+			{0.0, 0.0, 0.0}, 
+			{2.0, 1.0, 1.0}};
+		run_LU(3, 3, A);
+	}
+}
+
 int main() {
-	switch(11){
+	switch(14){
 	case 1:
 		test_transpose();
 		break;
@@ -497,6 +752,15 @@ int main() {
 		break;
 	case 11:
 		test_inverse();
+		break;
+	case 12:
+		test_col_space();
+		break;
+	case 13:
+		test_row_space();
+		break;
+	case 14:
+		test_LU();
 		break;
 	default:
 		printf("no tests\n");

@@ -75,7 +75,9 @@ void print_fpool(pool *frame);
 
 void print_properties(fmatrix mat);
 void print_as_array(fmatrix mat);
+void print_memory_layout(fmatrix mat);
 fmatrix fmatrix_copy_alloc(fmatrix mat, pool *frame);
+fmatrix fmatrix_ncol_copy_alloc(fmatrix mat, int c, pool* frame);
 
 void fswap(float *a, float *b);
 void intswap(int *a, int *b);
@@ -114,5 +116,10 @@ float fmatrix_cofactor_expansion(fmatrix mat, int lr, int lc, int ur, int uc);
 float fmatrix_determinant(fmatrix mat, pool *frame);
 
 fmatrix fmatrix_inverse(fmatrix mat, pool* frame);
+
+fmatrix fmatrix_col_space(fmatrix mat, pool* frame);
+fmatrix fmatrix_row_space(fmatrix mat, pool* frame);
+
+fmatrix* fmatrix_LU_factorize(fmatrix mat, fmatrix result[3], pool* frame);
 
 #endif MATRIX_H

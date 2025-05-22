@@ -1,12 +1,12 @@
 #include "matrix.h"
 
 // Checklist:
-// (done) 1) finish refactoring and testing for transpose reading
-// (done) 2) reorganize functions
-// (done) 3) add better comments for each function
-//        4) potentially add faster paths for non transpose matrices?
-//        5) column operations (easy to do with transpose)
-//        6) Look into sub expression overflow messages. Are they worth fixing? I think so
+//        1) potentially add faster paths for non transpose matrices?
+//		  2) extend LU factorization to non square matrices?
+//		  3) make fmatrix_col_space more in place?
+//		  4) Look into optimization, especially for multiplication and inverse
+//		  5) Implement a bunch of stuff related to graphics (more specificity on this later)
+//
 
 // allocates m by n blocks of memory of a given size in a pool, returns a struct with a pointer to it,
 // the dimensions of the matrix, and if it is a transpose or not.
@@ -110,6 +110,16 @@ void print_as_array(fmatrix mat) {
 	printf("\n");
 }
 
+void print_memory_layout(fmatrix mat) {
+	int size = mat.m * mat.n;
+
+	for (int i = 0; i < size; i++) {
+		printf("%f ", mat.matrix[i]);
+	}
+
+	printf("\n");
+}
+
 // takes an exisitng matrix, allocates space for a clone, copies its properties, and returns a deep copy
 // used to reduce how verbose non inplace functions are, because many of them shared this procedure 
 //
@@ -126,6 +136,30 @@ fmatrix fmatrix_copy_alloc(fmatrix mat, pool* frame) {
 	memcpy(result, mat.matrix, size);
 
 	return (fmatrix) { mat.m, mat.n, result, mat.transpose};
+}
+
+// takes an exisitng fmatrix and a number of columns to copy, then creates a new fmatrix with 
+// the first c columns of mat, allocated on frame
+// for now, it does not retain mat's transpose state
+fmatrix fmatrix_ncol_copy_alloc(fmatrix mat, int c, pool* frame) {
+	int size = mat.m * c;
+	float* result = (float*)raw_pool_alloc(frame, size * sizeof(float));
+
+	if (result  == NULL) {
+		printf("error while allocating matrix\n");
+		return ERROR_FMATRIX;
+	}
+
+	int offset; // for accessing result array linearly from a nested for loop
+	for (int i = 0; i < mat.m; i++) {
+		offset = i * c;
+		for (int j = 0; j < c; j++) {
+			result[offset + j] = MATRIX_AT(mat, i, j);
+			//result[offset + j] = mat.transpose ?  MATRIX_AT(mat, j, i) : MATRIX_AT(mat, i, j);
+		}
+	}
+
+	return (fmatrix) { mat.m, c, result, 0};
 }
 
 // swaps the values of floats located at a and b
@@ -433,11 +467,11 @@ fmatrix fmatrix_row_swap(fmatrix mat, int row1, int row2, pool *frame) {
 // fmatrix_row_sum_in(A, 0, 3, 1, 0.5) // R1 <- 3R1 + 0.5R2
 void fmatrix_row_sum_in(fmatrix mat, int dest, float c1, int src, float c2) {
 	if (dest >= mat.m || dest < 0) {
-		printf("row_sum error: \dest row %d out of bounds (make sure you are 0-indexed)\n", dest);
+		printf("row_sum error: dest row %d out of bounds (make sure you are 0-indexed)\n", dest);
 		return;
 	}
 	if (src >= mat.m || src < 0) {
-		printf("row_sum error: \src row %d out of bounds (make sure you are 0-indexed)\n", src);
+		printf("row_sum error: src row %d out of bounds (make sure you are 0-indexed)\n", src);
 		return;
 	}
 
@@ -454,11 +488,11 @@ void fmatrix_row_sum_in(fmatrix mat, int dest, float c1, int src, float c2) {
 // fmatrix A2 = fmatrix_row_sum(A, 0, 3, 1, 0.5) // R1 <- 3R1 + 0.5R2
 fmatrix fmatrix_row_sum(fmatrix mat, int dest, float c1, int src, float c2, pool* frame) {
 	if (dest >= mat.m || dest < 0) {
-		printf("row_sum error: \dest row %d out of bounds (make sure you are 0-indexed)\n", dest);
+		printf("row_sum error: dest row %d out of bounds (make sure you are 0-indexed)\n", dest);
 		return (fmatrix){ 0, 0, NULL};
 	}
 	if (src >= mat.m || src < 0) {
-		printf("row_sum error: \src row %d out of bounds (make sure you are 0-indexed)\n", src);
+		printf("row_sum error: src row %d out of bounds (make sure you are 0-indexed)\n", src);
 		return (fmatrix){ 0, 0, NULL};
 	}
 
@@ -536,11 +570,11 @@ fmatrix fmatrix_col_swap(fmatrix mat, int col1, int col2, pool* frame) {
 
 void fmatrix_col_sum_in(fmatrix mat, int dest, float c1, int src, float c2) {
 	if (dest >= mat.m || dest < 0) {
-		printf("col_sum error: \dest col %d out of bounds (make sure you are 0-indexed)\n", dest);
+		printf("col_sum error: \ndest col %d out of bounds (make sure you are 0-indexed)\n", dest);
 		return;
 	}
 	if (src >= mat.m || src < 0) {
-		printf("col_sum error: \src col %d out of bounds (make sure you are 0-indexed)\n", src);
+		printf("col_sum error: \nsrc col %d out of bounds (make sure you are 0-indexed)\n", src);
 		return;
 	}
 
@@ -551,11 +585,11 @@ void fmatrix_col_sum_in(fmatrix mat, int dest, float c1, int src, float c2) {
 
 fmatrix fmatrix_col_sum(fmatrix mat, int dest, float c1, int src, float c2, pool *frame) {
 	if (dest >= mat.m || dest < 0) {
-		printf("col_sum error: dest col %d out of bounds (make sure you are 0-indexed)\n", dest);
+		printf("col_sum error: \ndest col %d out of bounds (make sure you are 0-indexed)\n", dest);
 		return;
 	}
 	if (src >= mat.m || src < 0) {
-		printf("col_sum error: src col %d out of bounds (make sure you are 0-indexed)\n", src);
+		printf("col_sum error: \nsrc col %d out of bounds (make sure you are 0-indexed)\n", src);
 		return;
 	}
 
@@ -687,9 +721,9 @@ fmatrix fmatrix_inverse(fmatrix mat, pool* frame) {
 		
 		// for each row, eliminate elements under the pivot
 		for (int j = 0; j < mat_copy.m; j++) {
-			if(i == j) { continue; } // don't eliminate the pivot
+			if(i == j) { continue; }								// don't eliminate the pivot
 			row_value = MATRIX_AT(mat_copy, j, i);
-			if(row_value == 0){ continue; } // no elimination necessary
+			if(row_value == 0){ continue; }							// no elimination necessary
 			fmatrix_row_sum_in(mat_copy, j, 1.0, i, -row_value);	// eliminate the element
 			fmatrix_row_sum_in(result,	 j, 1.0, i, -row_value);
 		}
@@ -703,6 +737,147 @@ fmatrix fmatrix_inverse(fmatrix mat, pool* frame) {
 	}
 
 	return(result);
+}
 
-	//return mat_copy;
+
+// functions for finding basis for the 4 spaces (row/column space, null/left null space)
+
+// finds and returns a basis for the column space of mat
+// uses gaussian elimination to find the pivot columns
+// as we iterate through columns, "organize" the matrix s.t:
+//	-pivot columns are on the left
+//	-free columns are on the right
+// The goal is to then edit the copied matrix to only include the vectors that form a basis for the null space
+// However, even if I swap free columns to the right, they show up in memory in row major order. 
+// So, I can't just use pool_free_from starting from the first free column.
+// I could potentially write a proper in place transpose function, then use free from, then edit the fmatrix dimensions, then transpose back
+// But there could be an easier and more efficient way
+// For now, I am allocating another fmatrix on the pool, putting the pivot columns into it, then returning that
+// you could allocate room for the result fmatrix, then the copy, and then at the end, free from the start of unused columns in result?
+// I would rather work towards doing it all inside the copy matrix
+fmatrix fmatrix_col_space(fmatrix mat, pool* frame) {
+	fmatrix mat_cpy = fmatrix_copy_alloc(mat, frame);
+
+	int pivot_row;					// the row number of a located pivot
+	int check_row = 0;				// indicates which row to swap with the located pivot
+	int swap_col = -1;				// indicates index of a column where no pivot was located. If column is found to have a pivot, swap it with this one.
+	int rank = 0;					// counts the number of pivot columns
+	float pivot_value, row_value;
+	//float pivot_value;
+
+	// iterate through each column. If a pivot is found, eliminate all values below it, then add the column to our column space. 
+	//  If not, check the next column for a pivot, without increasing the row at which to check for that pivot
+	for (int i = 0; i < mat_cpy.n; i++) {
+		pivot_row = find_pivot_row(mat_cpy, check_row, i);
+		if (pivot_row == -1) {						// if no pivot is found, then the column is not part of the col space
+			if(swap_col == -1) { swap_col = i; }	// if no free column has been marked for swapping, mark this one.
+			continue; 
+		} 
+
+		if (pivot_row != check_row) { fmatrix_row_swap_in(mat_cpy, pivot_row, check_row); }
+		pivot_value = MATRIX_AT(mat_cpy, check_row, i);
+
+		// eliminate all elements under the pivot
+		for (int j = check_row + 1; j < mat_cpy.m; j++) {
+			row_value = MATRIX_AT(mat_cpy, j, i);
+			if (row_value == 0.0) { continue; } // if element is already 0, don't eliminate
+			fmatrix_row_sum_in(mat_cpy, j, pivot_value, pivot_row, -row_value); // eliminate the element
+			//print_fmatrix(mat_cpy);
+		}
+
+		check_row++;	// increment which row to check for pivots
+		rank++;			// another free column has been found, so increase the rank.
+
+		// if a marked free column exists for swapping, swap with the located pivot
+		if(swap_col == -1) { continue; }
+		
+		fmatrix_col_swap_in(mat_cpy, swap_col, i);		// swap the column
+		swap_col++;										// increment which column to swap.
+	}
+
+	// if the rank is 0 (mat is the 0 matrix), then return {0}
+	// The span of the columns of a 0 matrix is just 0
+	if (rank == 0) {
+		float zero[1][1] = {{0.0}};
+		fmatrix result = create_fmatrix(1, 1, zero, frame);
+		return result;
+	}
+
+	// allocate another fmatrix, then store the pivot columns inside it. 
+	fmatrix result = fmatrix_ncol_copy_alloc(mat_cpy, rank, frame);
+
+	return result;
+}
+
+
+// row space of A is equal to the col space of the transpose of A
+// seems to fail when passed already transposed matrices
+fmatrix fmatrix_row_space(fmatrix mat, pool* frame) {
+	fmatrix_transpose_in(&mat);
+	fmatrix result = fmatrix_col_space(mat, frame);
+	fmatrix_transpose_in(&result);
+	//print_fmatrix(result);
+	fmatrix_transpose_in(&mat);
+	return result;
+}
+
+
+// Factorizations and Decompositions
+// These functions take in a matrix input, but need to return multiple matrices that make up the respective factorization/decompositon
+// Each factorization has a defined number of matrices that make up its factorization, so for now, convention is to simply return an array of fmatrix pointers
+
+
+// Technically, this function does PLU factorization
+// A = PLU such that L is lower triangular, U is upper triangular, and P is a partial pivot matrix
+// A partial pivot matrix is simply an identity matrix that has undergone row swaps. In this case, the row swaps we do correspond to the row
+// swaps required to get A to be able to be row reduced to an upper triangular matrix. For matrices that need no row swaps, P is just identity
+// 
+// This function takes in mat, and populates an fmatrix array, with the first element being P, the second being L and the third being U
+// Works for matrices that require partial pivoting, but not non-square matrices FOR NOW
+// In the case that no LU factorization exists, (mat is "rank-deficient") free data from pool starting from U.matrix, then return NULL.
+// Usage: This one requires you to pass in a declared fmatrix array:
+// fmatrix PLU[3];
+// if(fmatrix_LU_factorize(A, PLU, &frame) == NULL){
+//     printf("LU factorization for A does not exist");
+// }
+fmatrix* fmatrix_LU_factorize(fmatrix mat, fmatrix PLU[3], pool* frame) {
+	if (mat.m != mat.n) { return NULL; } // does not handle rectangular matrices for now
+
+	// initialize P, L, and U
+	fmatrix P, L, U;
+	if((P = fmatrix_create_identity(mat.m, mat.n, frame)).matrix == NULL){ return NULL; }
+	if((L = fmatrix_create_identity(mat.m, mat.n, frame)).matrix == NULL){ return NULL; }
+	if((U = fmatrix_copy_alloc(mat, frame)).matrix == NULL){ return NULL; }
+
+	// row reduce U into an upper triangular matrix
+	int pivot_row;
+	float pivot_value;
+	for (int i = 0; i < U.n; i++) {
+		pivot_row = find_pivot_row(U, i, i);
+		if (pivot_row == -1) {						// if no pivot row is found, mat is rank-deficient
+			pool_free_from(frame, P.matrix);
+			return NULL;
+		}
+		if (pivot_row != i) {						// pivot row is found, but requires a pivot (row swap)
+			fmatrix_row_swap_in(U, i, pivot_row);
+			fmatrix_row_swap_in(P, i, pivot_row);	// track row swaps in the permutation/pivot matrix P
+		}
+		pivot_value = MATRIX_AT(U, i, i);
+
+		// eliminate lower elements
+		for (int j = i + 1; j < U.m; j++) {
+			float row_value = MATRIX_AT(U, j, i);
+			if(row_value == 0){ continue; } 
+
+			float k = (row_value / pivot_value);
+			fmatrix_row_sum_in(U, j, 1, i, -k);
+			L.matrix[INDEX_AT(L, j, i)] = k;		// track eliminations in L
+		}
+	}
+	// populate the passed in array
+	PLU[0] = P;
+	PLU[1] = L;
+	PLU[2] = U;
+
+	return PLU;
 }
