@@ -25,7 +25,7 @@ fmatrix create_fmatrix(int m, int n, float* matrix, pool* frame) {
 		return ERROR_FMATRIX;
 	}
 
-	if ((matrix = (float*)pool_alloc(frame, matrix, m * n * sizeof(float))) == NULL) {
+	if ((matrix = pool_alloc(frame, matrix, m * n * sizeof(float))) == NULL) {
 		printf("pool allocation for matrix failed, returing empty matrix\n");
 		return ERROR_FMATRIX;
 	}
@@ -56,8 +56,37 @@ fmatrix fmatrix_create_identity(int m, int n, pool* frame) {
 	// initialize all values to 0 except where i = j
 	for (int i = 0; i < m; i++) {
 		for (int j = 0; j < n; j++) {
-			if(i == j){ matrix[INDEX_AT(mat, i, j)] = 1; }
-			else{ matrix[INDEX_AT(mat, i, j)] = 0; }
+			if(i == j){ matrix[INDEX_AT(mat, i, j)] = 1.0f; }
+			else{ matrix[INDEX_AT(mat, i, j)] = 0.0f; }
+		}
+	}
+
+	return mat;
+}
+
+// creates an m x n matrix with all elements set to 0.
+fmatrix fmatrix_create_zero(int m, int n, pool* frame) {
+	if (m < 0 || n < 0) {
+		printf("fmatrix must have positive row/columns\n");
+		return ERROR_FMATRIX;
+	}
+	if (!frame || !frame->start) {
+		printf("failed to create matrix (faulty input frame). Returning empty matrix\n");
+		return ERROR_FMATRIX;
+	}
+
+	float* matrix = raw_pool_alloc(frame, m * n * sizeof(float));
+	if (matrix == NULL) {
+		printf("pool allocation for identity matrix failed, returning error matrix");
+		return ERROR_FMATRIX;
+	}
+
+	fmatrix mat = (fmatrix) {m, n, matrix, 0};
+
+	// initialize all values to 0 except where i = j
+	for (int i = 0; i < m; i++) {
+		for (int j = 0; j < n; j++) {
+			matrix[INDEX_AT(mat, i, j)] = 0.0f;
 		}
 	}
 
@@ -554,11 +583,11 @@ void fmatrix_col_swap_in(fmatrix mat, int col1, int col2) {
 fmatrix fmatrix_col_swap(fmatrix mat, int col1, int col2, pool* frame) {
 	if (col1 >= mat.m || col1 < 0) {
 		printf("col_swap error: \ncol1 %d out of bounds (make sure you are 0-indexed)\n", col1);
-		return;
+		return ERROR_FMATRIX;
 	}
 	if (col2 >= mat.m || col2 < 0) {
 		printf("col_swap error: \ncol2 %d out of bounds (make sure you are 0-indexed)\n", col2);
-		return;
+		return ERROR_FMATRIX;
 	}
 
 	fmatrix result = fmatrix_copy_alloc(mat, frame);
@@ -586,11 +615,11 @@ void fmatrix_col_sum_in(fmatrix mat, int dest, float c1, int src, float c2) {
 fmatrix fmatrix_col_sum(fmatrix mat, int dest, float c1, int src, float c2, pool *frame) {
 	if (dest >= mat.m || dest < 0) {
 		printf("col_sum error: \ndest col %d out of bounds (make sure you are 0-indexed)\n", dest);
-		return;
+		return ERROR_FMATRIX;
 	}
 	if (src >= mat.m || src < 0) {
 		printf("col_sum error: \nsrc col %d out of bounds (make sure you are 0-indexed)\n", src);
-		return;
+		return ERROR_FMATRIX;
 	}
 
 	fmatrix result = fmatrix_copy_alloc(mat, frame);
@@ -715,7 +744,7 @@ fmatrix fmatrix_inverse(fmatrix mat, pool* frame) {
 			fmatrix_row_swap_in(result, i, pivot_row);				// do it for the result matrix as well
 		}
 
-		float normalize = 1.0 / MATRIX_AT(mat_copy, i, i);
+		float normalize = 1.0f / MATRIX_AT(mat_copy, i, i);
 		fmatrix_row_scale_in(mat_copy, i, normalize);				// set the pivot to 1 by scaling its row
 		fmatrix_row_scale_in(result, i, normalize);
 		
@@ -724,8 +753,8 @@ fmatrix fmatrix_inverse(fmatrix mat, pool* frame) {
 			if(i == j) { continue; }								// don't eliminate the pivot
 			row_value = MATRIX_AT(mat_copy, j, i);
 			if(row_value == 0){ continue; }							// no elimination necessary
-			fmatrix_row_sum_in(mat_copy, j, 1.0, i, -row_value);	// eliminate the element
-			fmatrix_row_sum_in(result,	 j, 1.0, i, -row_value);
+			fmatrix_row_sum_in(mat_copy, j, 1.0f, i, -row_value);	// eliminate the element
+			fmatrix_row_sum_in(result,	 j, 1.0f, i, -row_value);
 		}
 	}
 
@@ -798,7 +827,7 @@ fmatrix fmatrix_col_space(fmatrix mat, pool* frame) {
 	// if the rank is 0 (mat is the 0 matrix), then return {0}
 	// The span of the columns of a 0 matrix is just 0
 	if (rank == 0) {
-		float zero[1][1] = {{0.0}};
+		float zero[1][1] = {{0.0f}};
 		fmatrix result = create_fmatrix(1, 1, zero, frame);
 		return result;
 	}
@@ -828,8 +857,8 @@ fmatrix fmatrix_row_space(fmatrix mat, pool* frame) {
 
 
 // Technically, this function does PLU factorization
-// A = PLU such that L is lower triangular, U is upper triangular, and P is a partial pivot matrix
-// A partial pivot matrix is simply an identity matrix that has undergone row swaps. In this case, the row swaps we do correspond to the row
+// PA = LU such that L is lower triangular, U is upper triangular, and P is a permutation matrix
+// A permutation matrix is simply an identity matrix that has undergone row swaps. In this case, the row swaps we do correspond to the row
 // swaps required to get A to be able to be row reduced to an upper triangular matrix. For matrices that need no row swaps, P is just identity
 // 
 // This function takes in mat, and populates an fmatrix array, with the first element being P, the second being L and the third being U
@@ -859,8 +888,8 @@ fmatrix* fmatrix_LU_factorize(fmatrix mat, fmatrix PLU[3], pool* frame) {
 			return NULL;
 		}
 		if (pivot_row != i) {						// pivot row is found, but requires a pivot (row swap)
-			fmatrix_row_swap_in(U, i, pivot_row);
-			fmatrix_row_swap_in(P, i, pivot_row);	// track row swaps in the permutation/pivot matrix P
+			fmatrix_row_swap_in(U, i, pivot_row);	// track row swaps in the permutation/pivot matrix P
+			fmatrix_row_swap_in(P, i, pivot_row);
 		}
 		pivot_value = MATRIX_AT(U, i, i);
 
@@ -880,4 +909,80 @@ fmatrix* fmatrix_LU_factorize(fmatrix mat, fmatrix PLU[3], pool* frame) {
 	PLU[2] = U;
 
 	return PLU;
+}
+
+// You can solve a system of n equations in n variables quickly using LU factorization. 
+// let Ax = b (A and b are given, A is m x m, and b = m x 1)
+// let PA = LU (where P is a permutation matrix, L is lower triangular, and U is upper triangular)
+// so: P^tLUx = b, and LUx = Pb
+// let y = Ux
+// so: Ly = Pb
+// L is lower triangular, so it is easy to solve for y in Ly = b
+// Ux = y
+// U is upper triangular, and y is now known, so it is easy to solve for x
+// 
+// Takes in m x m matrix A, m x 1 vector b, then returns an m x 1 vector x
+// If LU_factorize returns NULL, then handle that somehow.
+// If this happens, then there are either infinite solutions, or zero. Maybe return matrices that indicate this?
+// They need to be seperate from ERROR_FMATRIX, which should only return on actual errors
+fmatrix fmatrix_LU_solve(fmatrix A, fmatrix b, pool* frame) {
+	if (A.m != A.n) {
+		printf("Solving a system requires a square matrix (for now)\n");
+		return ERROR_FMATRIX;
+	}
+	if (b.m != A.m && b.n != 1) {
+		printf("Solving a system requires b to be m x 1, where m is A.m\n");
+		return ERROR_FMATRIX;
+	}
+
+	// get the PLU factorization of A, and check if it even exists. 
+	// for now, just return, but in the future actually handle the case
+	fmatrix PLU[3];
+	if (fmatrix_LU_factorize(A, PLU, frame) == NULL) { return A; }
+	fmatrix P = PLU[0];
+	fmatrix L = PLU[1];
+	fmatrix U = PLU[2];
+
+	// allocate space for x and y, but do x first so we can free up y at the end
+	fmatrix x = fmatrix_create_zero(A.m, 1, frame);
+	if (x.matrix == NULL) {return ERROR_FMATRIX; }
+	fmatrix y = fmatrix_create_zero(A.m, 1, frame);
+	if (y.matrix == NULL) { 
+		pool_free_from(frame, x.matrix);
+		return ERROR_FMATRIX; 
+	}
+
+	// also allocate a copy of p, so we can permute it (LUx = Pb)
+	// I wonder if we can do this lazily, just by accessing the correct element of b
+	fmatrix Pb = fmatrix_multiply(P, b, frame);
+
+	// consider putting the following two loops into their own functions (forward solve/back solve)
+	// It isn't very difficult to do this, but I don't need it at the moment, so I'll leave them as they are.
+
+	// Ly = Pb, solve for y
+	for (int r = 0; r < L.m; r++) {
+		// iterate through the current row until you reach the diagonal 
+		float b_r = Pb.matrix[r]; // use elements of b to determine corresponding elements of y
+		for (int c = 0; c < r; c++) {
+			b_r -= (y.matrix[c] * MATRIX_AT(L, r, c));
+			//printf("uh: %f * %f = %f\n", y.matrix[c], MATRIX_AT(L, r, c), y.matrix[c] * MATRIX_AT(L, r, c));
+		}
+		y.matrix[r] = b_r; // For now, diagonal elements of L are 1.0. Make sure to change this line if that changes
+	}
+
+	// Ux = y, solve for x (iterate from the bottom)
+	for (int r = U.m - 1; r >= 0; r--) {
+		// iterate backwards through the current row until you reach the diagonal 
+		float y_r = y.matrix[r]; // use elements of y to determine corresponding elements of x
+		for (int c = U.n - 1; c > r; c--) {
+			y_r -= (x.matrix[c] * MATRIX_AT(U, r, c));
+			//printf("uh: %f * %f = %f\n", y.matrix[c], MATRIX_AT(L, r, c), y.matrix[c] * MATRIX_AT(L, r, c));
+		}
+		x.matrix[r] = y_r / MATRIX_AT(U, r, r); 
+	}
+
+	// free up y, which won't be used anymore
+	pool_free_from(frame, y.matrix);
+
+	return x;
 }

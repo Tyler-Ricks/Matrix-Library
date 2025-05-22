@@ -40,9 +40,9 @@ void test_add() {
 							  count43 * rows43 * rows43) * 
 							  sizeof(float));
 
-	float matrixa[3][4] = {{1.5, 2.5, 3.5, 5},
-						   {4.0, 5.0, 6.0, 5}, 
-						   {7.0, 8.0, 9.0, 5}};
+	float matrixa[3][4] = {{1.5f, 2.5f, 3.5f, 5.0f},
+						   {4.0f, 5.0f, 6.0f, 5.0f}, 
+						   {7.0f, 8.0f, 9.0f, 5.0f}};
 	fmatrix A = create_fmatrix(rows34, cols34, matrixa, &frame);
 	printf("A:\n");
 	print_fmatrix(A);
@@ -59,10 +59,10 @@ void test_add() {
 
 	printf("\nB: \n");
 
-	float matrixb[4][3] = {{1.0, 1.0, 1.0},
-						   {1.0, 1.0, 1.0},
-						   {1.0, 1.0, 1.0},
-						   {1.0, 1.0, 1.0}};
+	float matrixb[4][3] = {{1.0f, 1.0f, 1.0f},
+						   {1.0f, 1.0f, 1.0f},
+						   {1.0f, 1.0f, 1.0f},
+						   {1.0f, 1.0f, 1.0f}};
 
 	fmatrix B = create_fmatrix(rows43, cols43, matrixb, &frame);
 	print_fmatrix(B);
@@ -82,9 +82,9 @@ void test_scale() {
 
 	pool frame = create_pool((count34 * row34 * col34) * sizeof(float));
 
-	float matrixa[3][4] ={{1.0, 2.0, 3.0, 4.0},
-						  {5.0, 6.0, 7.0, 8.0},
-						  {9.0, 10.0, 11.0, 12.0}};
+	float matrixa[3][4] ={{1.0f, 2.0f, 3.0f, 4.0f},
+						  {5.0f, 6.0f, 7.0f, 8.0f},
+						  {9.0f, 10.0f, 11.0f, 12.0f}};
 
 	fmatrix A = create_fmatrix(row34, col34, matrixa, &frame);
 	float scale = 2.0;
@@ -124,14 +124,14 @@ void test_multiplication() {
 							  (count31 * row31 * col31))*
 							   sizeof(float));
 
-	float matA[3][3] = {{1.0, 5.0, -3.0},
-						{-1.0, 0.0, 4.0},
-						{12.0, 5.0, -1.0}};
+	float matA[3][3] = {{1.0f, 5.0f, -3.0f},
+						{-1.0f, 0.0f, 4.0f},
+						{12.0f, 5.0f, -1.0f}};
 	fmatrix A = create_fmatrix(row33, col33, matA, &frame);
 
-	float matB[3][3] = {{7.0, -2.0, 4.0},
-						{-1.0, -1.0, 3.0},
-						{1.0, 2.0, -3.0}};
+	float matB[3][3] = {{7.0f, -2.0f, 4.0f},
+						{-1.0f, -1.0f, 3.0f},
+						{1.0f, 2.0f, -3.0f}};
 	fmatrix B = create_fmatrix(row33, col33, matB, &frame);
 
 	printf("A:\n");
@@ -140,9 +140,9 @@ void test_multiplication() {
 	printf("\nB:\n");
 	print_fmatrix(B);
 
-	float vecx[3][1] = {{1.0},
-						{-2.0},
-						{4.0}};
+	float vecx[3][1] = {{1.0f},
+						{-2.0f},
+						{4.0f}};
 	fmatrix x = create_fmatrix(row31, col31, vecx, &frame);
 	printf("\nx: \n");
 	print_fmatrix(x);
@@ -179,12 +179,12 @@ void test_pool() {
 		pool frame = create_pool(2 * sizeof(float));
 		printf("pool created. size: %d\n", frame.size);
 
-		float n1 = 3.2;
+		float n1 = 3.2f;
 		float* a = pool_alloc(&frame, &n1, sizeof(float));
 	
 		printf("allocated %f to pointer a", *a);
 
-		float n2 = 12.1;
+		float n2 = 12.1f;
 		float* b = pool_alloc(&frame, &n2, sizeof(float));
 
 		// test to make sure ptr on pool bumps properly
@@ -243,9 +243,9 @@ void test_row_scale() {
 	int col33 = 3;
 	pool frame = create_pool((count33 * row33 * col33) * sizeof(float));
 
-	float matA[3][3] = {{1.0, 5.0, -3.0},
-						{-1.0, 0.0, 4.0},
-						{12.0, 5.0, -1.0}};
+	float matA[3][3] = {{1.0f, 5.0f, -3.0f},
+						{-1.0f, 0.0f, 4.0f},
+						{12.0f, 5.0f, -1.0f}};
 	fmatrix A = create_fmatrix(row33, col33, matA, &frame);
 
 	printf("A: \n");
@@ -268,9 +268,9 @@ void test_row_swap() {
 	int col33 = 3;
 	pool frame = create_pool((count33 * row33 * col33) * sizeof(float));
 
-	float matA[3][3] = {{1.0, 5.0, -3.0},
-						{-1.0, 0.0, 4.0},
-						{12.0, 5.0, -1.0}};
+	float matA[3][3] = {{1.0f, 5.0f, -3.0f},
+						{-1.0f, 0.0f, 4.0f},
+						{12.0f, 5.0f, -1.0f}};
 	fmatrix A = create_fmatrix(row33, col33, matA, &frame);
 
 	printf("A: \n");
@@ -293,9 +293,9 @@ void test_row_sum() {
 	int col33 = 3;
 	pool frame = create_pool((count33 * row33 * col33) * sizeof(float));
 
-	float matA[3][3] = {{1.0, 5.0, -3.0},
-		{-1.0, 0.0, 4.0},
-		{12.0, 2.0, -1.0}};
+	float matA[3][3] = {{1.0f, 5.0f, -3.0f},
+		{-1.0f, 0.0f, 4.0f},
+		{12.0f, 2.0f, -1.0f}};
 	fmatrix A = create_fmatrix(row33, col33, matA, &frame);
 
 	printf("A: \n");
@@ -319,9 +319,9 @@ void test_col_scale() {
 	int col33 = 3;
 	pool frame = create_pool((count33 * row33 * col33) * sizeof(float));
 
-	float matA[3][3] = {{1.0, 5.0, -3.0},
-		{-1.0, 0.0, 4.0},
-		{12.0, 5.0, -1.0}};
+	float matA[3][3] = {{1.0f, 5.0f, -3.0f},
+		{-1.0f, 0.0f, 4.0f},
+		{12.0f, 5.0f, -1.0f}};
 	fmatrix A = create_fmatrix(row33, col33, matA, &frame);
 
 	printf("A: \n");
@@ -343,9 +343,9 @@ void test_determinant() {
 	int col33 = 3;
 	int count33 = 1;
 
-	float matrixa[3][3] = {{1.0, 1.0, 1.0},
-						   {3.0, 3.0, 3.0},
-						   {0.0, 4.5, -4.0}};
+	float matrixa[3][3] = {{1.0f, 1.0f, 1.0f},
+						   {3.0f, 3.0f, 3.0f},
+						   {0.0f, 4.5f, -4.0f}};
 
 	/*float matrixa[3][3] = {{1.0, 0.0, 3.0},
 		{0.0, 1.0, 0.0},
@@ -370,7 +370,7 @@ void test_determinant() {
 	
 }*/
 
-void run_normal_inverse(int r, int c, float* mat) {
+void run_normal_inverse(int r, int c, float** mat) {
 	int count = 3; // one for the input, one for the copy of the input, and a third one for the inverse
 	pool frame = create_pool(count * r * c * sizeof(float));
 
@@ -397,7 +397,7 @@ void run_normal_inverse(int r, int c, float* mat) {
 	free_pool(&frame);
 }
 
-void run_transpose_inverse(int r, int c, float* mat) {
+void run_transpose_inverse(int r, int c, float** mat) {
 	int count = 3; // one for the input, one for the copy of the input, and a third one for the inverse
 	pool frame = create_pool(count * r * c * sizeof(float));
 
@@ -434,9 +434,9 @@ void test_inverse() {
 	// test a basic invertible matrix
 	{
 		printf("testing invertible matrix:\n");
-		float A[3][3] = {{3.0, 2.0, 1.0},
-							{-1.0, 0.0, 5.0},
-							{2.0, 2.0, 2.0}};
+		float A[3][3] = {{3.0f, 2.0f, 1.0f},
+							{-1.0f, 0.0f, 5.0f},
+							{2.0f, 2.0f, 2.0f}};
 		run_normal_inverse(3, 3, A);
 		run_transpose_inverse(3, 3, A);
 	}
@@ -444,9 +444,9 @@ void test_inverse() {
 	// test a non square matrix
 	{
 		printf("testing non square matrix:\n");
-		float B[3][2] = {{1.0, 2.0},
-						 {3.0, 0.0},
-						 {-3.2, 4.2}};
+		float B[3][2] = {{1.0f, 2.0f},
+						 {3.0f, 0.0f},
+						 {-3.2f, 4.2f}};
 		run_normal_inverse(3, 2, B);
 		run_transpose_inverse(3, 2, B);
 	}
@@ -454,9 +454,9 @@ void test_inverse() {
 	// test a square, but not invertible, matrix
 	{
 		printf("testing non invertible matrix:\n");
-		float C[3][3] = {{1.0, 3.0, -1.0},
-						  {-4.0, 2.0, 2.0},
-						  {-3.0, 5.0, 1.0}};
+		float C[3][3] = {{1.0f, 3.0f, -1.0f},
+						  {-4.0f, 2.0f, 2.0f},
+						  {-3.0f, 5.0f, 1.0f}};
 
 		run_normal_inverse(3, 3, C);
 		run_transpose_inverse(3, 3, C);
@@ -515,18 +515,18 @@ void test_col_space() {
 	// test a basic invertible matrix
 	{
 		printf("testing invertible matrix:\n");
-		float A[3][3] = {{ 3.0, 2.0, 1.0},
-						 {-1.0, 0.0, 5.0},
-						 { 2.0, 2.0, 2.0}};
+		float A[3][3] = {{ 3.0f, 2.0f, 1.0f},
+						 {-1.0f, 0.0f, 5.0f},
+						 { 2.0f, 2.0f, 2.0f}};
 		run_col_space(3, 3, A);
 	}
 
 	// test a non invertible matrix
 	{
 		printf("\ntesting non invertible matrix and its transpose:\n");
-		float B[3][4] = {	{ 3.0, 2.0, 5.0, 1.0},
-							{-1.0, 0.0, 4.0, 5.0},
-							{ 2.0, 2.0, 6.0, 2.0}};
+		float B[3][4] = {	{ 3.0f, 2.0f, 5.0f, 1.0f},
+							{-1.0f, 0.0f, 4.0f, 5.0f},
+							{ 2.0f, 2.0f, 6.0f, 2.0f}};
 		run_col_space(3, 4, B);
 
 		run_col_space_transpose(3, 4, B);
@@ -535,9 +535,9 @@ void test_col_space() {
 	// test a non invertible matrix that requires 2 col swaps
 	{
 		printf("\ntesting multiple swaps and transpose:\n");
-		float B[3][5] = {	{ 3.0, 2.0, 5.0, 0.0, 1.0},
-							{-1.0, 0.0, 4.0, 0.0, 5.0},
-							{ 2.0, 2.0, 6.0, 0.0, 2.0}};
+		float B[3][5] = {	{ 3.0f, 2.0f, 5.0f, 0.0f, 1.0f},
+							{-1.0f, 0.0f, 4.0f, 0.0f, 5.0f},
+							{ 2.0f, 2.0f, 6.0f, 0.0f, 2.0f}};
 		run_col_space(3, 5, B);
 
 		run_col_space_transpose(3, 5, B);
@@ -546,10 +546,10 @@ void test_col_space() {
 	// test the 0 matrix
 	{
 		printf("\ntesting a 0 matrix\n");
-		float C[4][3] = {{0.0, 0.0, 0.0},
-						 {0.0, 0.0, 0.0},
-						 {0.0, 0.0, 0.0},
-						 {0.0, 0.0, 0.0}};
+		float C[4][3] = {{0.0f, 0.0f, 0.0f},
+						 {0.0f, 0.0f, 0.0f},
+						 {0.0f, 0.0f, 0.0f},
+						 {0.0f, 0.0f, 0.0f}};
 		run_col_space(4, 3, C);
 		run_col_space_transpose(4, 3, C);
 	}
@@ -607,18 +607,18 @@ void test_row_space() {
 	// test a basic invertible matrix
 	{
 		printf("testing invertible matrix:\n");
-		float A[3][3] = {{ 3.0, 2.0, 1.0},
-			{-1.0, 0.0, 5.0},
-			{ 2.0, 2.0, 2.0}};
+		float A[3][3] = {{ 3.0f, 2.0f, 1.0f},
+			{-1.0f, 0.0f, 5.0f},
+			{ 2.0f, 2.0f, 2.0f}};
 		run_row_space(3, 3, A);
 	}
 
 	// test a non invertible matrix
 	{
 		printf("\ntesting non invertible matrix and its transpose:\n");
-		float B[3][4] = {	{ 3.0, 2.0, 5.0, 1.0},
-			{-1.0, 0.0, 4.0, 5.0},
-			{ 2.0, 2.0, 6.0, 2.0}};
+		float B[3][4] = {	{ 3.0f, 2.0f, 5.0f, 1.0f},
+			{-1.0f, 0.0f, 4.0f, 5.0f},
+			{ 2.0f, 2.0f, 6.0f, 2.0f}};
 		run_row_space(3, 4, B);
 
 		run_row_space_transpose(3, 4, B);
@@ -627,9 +627,9 @@ void test_row_space() {
 	// test a non invertible matrix that requires 2 col swaps
 	{
 		printf("\ntesting multiple swaps and transpose:\n");
-		float B[3][5] = {{ 3.0, 2.0, 5.0, 0.0, 1.0},
-			{-1.0, 0.0, 4.0, 0.0, 5.0},
-			{ 2.0, 2.0, 6.0, 0.0, 2.0}};
+		float B[3][5] = {{ 3.0f, 2.0f, 5.0f, 0.0f, 1.0f},
+			{-1.0f, 0.0f, 4.0f, 0.0f, 5.0f},
+			{ 2.0f, 2.0f, 6.0f, 0.0f, 2.0f}};
 		run_row_space(3, 5, B);
 
 		run_row_space_transpose(3, 5, B);
@@ -638,10 +638,10 @@ void test_row_space() {
 	// test the 0 matrix
 	{
 		printf("\ntesting a 0 matrix\n");
-		float C[4][3] = {{0.0, 0.0, 0.0},
-			{0.0, 0.0, 0.0},
-			{0.0, 0.0, 0.0},
-			{0.0, 0.0, 0.0}};
+		float C[4][3] = {{0.0f, 0.0f, 0.0f},
+			{0.0f, 0.0f, 0.0f},
+			{0.0f, 0.0f, 0.0f},
+			{0.0f, 0.0f, 0.0f}};
 		run_row_space(4, 3, C);
 		run_row_space_transpose(4, 3, C);
 	}
@@ -657,23 +657,23 @@ void run_LU(int r, int c, float* A) {
 
 	printf("\nmatrix: \n");
 	fmatrix mat = create_fmatrix(r, c, A, &frame);
-
-	printf("frame pointer offset before: %d\n", (char*)frame.ptr - (char*)frame.start);
 	print_fmatrix(mat);
 
-	printf("transpose:\n");
+	printf("frame pointer offset before: %td\n", (char*)frame.ptr - (char*)frame.start);
+
+	/*printf("transpose:\n");
 	fmatrix_transpose_in(&mat);
-	print_fmatrix(mat);
+	print_fmatrix(mat);*/
 
 	fmatrix PLU[3];
 	if (fmatrix_LU_factorize(mat, PLU, &frame) == NULL) {
 		printf("LU factorization for this matrix does not exist!\n");
-		printf("frame pointer offset after: %d\n", (char*)frame.ptr - (char*)frame.start);
+		printf("frame pointer offset after: %td\n", (char*)frame.ptr - (char*)frame.start);
 		free_pool(&frame);
 		return;
 	}
 
-	printf("frame pointer offset after: %d\n", (char*)frame.ptr - (char*)frame.start);
+	printf("frame pointer offset after: %td\n", (char*)frame.ptr - (char*)frame.start);
 
 	printf("P:\n");
 	print_fmatrix(PLU[0]);
@@ -684,7 +684,8 @@ void run_LU(int r, int c, float* A) {
 	printf("\nU:\n");
 	print_fmatrix(PLU[2]);
 
-	printf("\nA = PLU:\n");
+	printf("\nPA = LU -> A = P^tLU:\n");
+	fmatrix_transpose_in(&PLU[0]);
 	print_fmatrix(fmatrix_multiply(PLU[0], fmatrix_multiply(PLU[1], PLU[2], &frame), &frame));
 
 	free_pool(&frame);
@@ -694,32 +695,82 @@ void test_LU() {
 	// test a basic invertible matrix
 	{
 		printf("testing invertible matrix:\n");
-		float A[2][2] = {{ 3.0, 2.0},
-			{7.0, 4.0}};
+		float A[2][2] = {{ 3.0f, 2.0f},
+			{7.0f, 4.0f}};
 		run_LU(2, 2, A);
 	}
 
 	// test an invertible matrix that requires a pivot
 	{
 		printf("testing a pivoting matrix:\n");
-		float A[3][3] = {{ 0.0, 2.0, 1.0},
-			{1.0, 1.0, 0.0}, 
-			{2.0, 1.0, 1.0}};
+		float A[3][3] = {{ 0.0f, 2.0f, 1.0f},
+			{1.0f, 1.0f, 0.0f}, 
+			{2.0f, 1.0f, 1.0f}};
 		run_LU(3, 3, A);
 	}
 
 	// test a rank-deficient matrix (has no LU factorization)
 	{
 		printf("testing rank deficient matrix:\n");
-		float A[3][3] = {{ 0.0, 2.0, 1.0},
-			{0.0, 0.0, 0.0}, 
-			{2.0, 1.0, 1.0}};
+		float A[3][3] = {{ 0.0f, 2.0f, 1.0f},
+			{0.0f, 0.0f, 0.0f}, 
+			{2.0f, 1.0f, 1.0f}};
 		run_LU(3, 3, A);
 	}
 }
 
+void run_LU_solve(int r, int c, float* A, float* b) {
+	int countmm = 4; // 1 for A, 3 for PLU 
+	int countm1 = 5; // 1 for b, 2 for x and y, 1 for Pb, 1 for testing Ax, 1 for result
+	pool frame = create_pool((countmm * r * c + countm1 * c) * sizeof(float));
+
+	if (frame.start == NULL) {
+		exit(1);
+	}
+
+	printf("\nA: \n");
+	fmatrix mat = create_fmatrix(r, c, A, &frame);
+	print_fmatrix(mat);
+
+	printf("\nb: \n");
+	fmatrix vec = create_fmatrix(c, 1, b, &frame);
+	print_fmatrix(vec);
+
+	fmatrix x = fmatrix_LU_solve(mat, vec, &frame);
+
+	printf("\nx: \n");
+	print_fmatrix(x);
+
+	printf("test Ax = b:\n");
+	print_fmatrix(fmatrix_multiply(mat, x, &frame));
+
+	free_pool(&frame);
+}
+
+test_LU_solve() {
+	// test a basic matrix and vector
+	/*{
+		printf("testing normal matrix:\n");
+		float A[3][3] = {{1.0f, -3.0f, 0.0f}, 
+			{0.0f, 1.0f, 3.0f}, 
+			{2.0f, -10.0f, 2.0f}};
+		float b[3][1] = {-5.0f, -1.0f, -20.0f};
+		run_LU_solve(3, 3, A, b);
+	}*/
+
+	// test a matrix that requires permutations
+	{
+		printf("testing matrix that requires permutation:\n");
+		float A[3][3] = {{0.0f, 1.0f, 3.0f}, 
+			{2.0f, -10.0f, 2.0f}, 
+			{1.0f, -3.0f, 0.0f}};
+		float b[3][1] = {-1.0f, -20.0f, -5.0};
+		run_LU_solve(3, 3, A, b);
+	}
+}
+
 int main() {
-	switch(14){
+	switch(15){
 	case 1:
 		test_transpose();
 		break;
@@ -761,6 +812,9 @@ int main() {
 		break;
 	case 14:
 		test_LU();
+		break;
+	case 15:
+		test_LU_solve();
 		break;
 	default:
 		printf("no tests\n");
