@@ -913,10 +913,10 @@ fmatrix* fmatrix_LU_factorize(fmatrix mat, fmatrix PLU[3], pool* frame) {
 
 // You can solve a system of n equations in n variables quickly using LU factorization. 
 // let Ax = b (A and b are given, A is m x m, and b = m x 1)
-// let A = LU (where L is lower triangular, and U is upper triangular)
-// so: LUx = b
+// let PA = LU (where P is a permutation matrix, L is lower triangular, and U is upper triangular)
+// so: P^tLUx = b, and LUx = Pb
 // let y = Ux
-// so: Ly = b
+// so: Ly = Pb
 // L is lower triangular, so it is easy to solve for y in Ly = b
 // Ux = y
 // U is upper triangular, and y is now known, so it is easy to solve for x
@@ -954,19 +954,10 @@ fmatrix fmatrix_LU_solve(fmatrix A, fmatrix b, pool* frame) {
 
 	// also allocate a copy of p, so we can permute it (LUx = Pb)
 	// I wonder if we can do this lazily, just by accessing the correct element of b
-	//fmatrix_transpose_in(&P);
-	/*print_fmatrix(fmatrix_multiply(L, U, frame));
-	printf("P:\n");
-	print_fmatrix(P);*/
 	fmatrix Pb = fmatrix_multiply(P, b, frame);
-	//fmatrix Pb = fmatrix_copy_alloc(b, frame);
 
-	/*printf("\nL\n");
-	print_fmatrix(L);
-	printf("\nU\n");
-	print_fmatrix(U);
-	printf("\nPb\n");
-	print_fmatrix(Pb);*/
+	// consider putting the following two loops into their own functions (forward solve/back solve)
+	// It isn't very difficult to do this, but I don't need it at the moment, so I'll leave them as they are.
 
 	// Ly = Pb, solve for y
 	for (int r = 0; r < L.m; r++) {
@@ -979,9 +970,6 @@ fmatrix fmatrix_LU_solve(fmatrix A, fmatrix b, pool* frame) {
 		y.matrix[r] = b_r; // For now, diagonal elements of L are 1.0. Make sure to change this line if that changes
 	}
 
-	//printf("\ntest y:\n");
-	//print_fmatrix(y);
-
 	// Ux = y, solve for x (iterate from the bottom)
 	for (int r = U.m - 1; r >= 0; r--) {
 		// iterate backwards through the current row until you reach the diagonal 
@@ -992,9 +980,6 @@ fmatrix fmatrix_LU_solve(fmatrix A, fmatrix b, pool* frame) {
 		}
 		x.matrix[r] = y_r / MATRIX_AT(U, r, r); 
 	}
-
-	/*printf("\ntest x:\n");
-	print_fmatrix(x);*/
 
 	// free up y, which won't be used anymore
 	pool_free_from(frame, y.matrix);
