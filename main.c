@@ -659,7 +659,24 @@ void run_LU(int r, int c, float* A) {
 	fmatrix mat = create_fmatrix(r, c, A, &frame);
 	print_fmatrix(mat);
 
-	fmatrix_LU_factorize(mat, &frame);
+	fmatrix PLU[3];
+	if (fmatrix_LU_factorize(mat, PLU, &frame) == NULL) {
+		printf("LU factorization for this matrix does not exist!\n");
+		free_pool(&frame);
+		return;
+	}
+
+	printf("P:\n");
+	print_fmatrix(PLU[0]);
+	//printf("%d\n", PLU[0].m);
+	printf("\nL:\n");
+	print_fmatrix(PLU[1]);
+	//printf("%d\n", PLU[1].m);
+	printf("\nU:\n");
+	print_fmatrix(PLU[2]);
+
+	printf("\nA = PLU:\n");
+	print_fmatrix(fmatrix_multiply(PLU[0], fmatrix_multiply(PLU[1], PLU[2], &frame), &frame));
 
 	free_pool(&frame);
 }
@@ -678,6 +695,15 @@ void test_LU() {
 		printf("testing a pivoting matrix:\n");
 		float A[3][3] = {{ 0.0, 2.0, 1.0},
 			{1.0, 1.0, 0.0}, 
+			{2.0, 1.0, 1.0}};
+		run_LU(3, 3, A);
+	}
+
+	// test a rank-deficient matrix (has no LU factorization)
+	{
+		printf("testing rank deficient matrix:\n");
+		float A[3][3] = {{ 0.0, 2.0, 1.0},
+			{0.0, 0.0, 0.0}, 
 			{2.0, 1.0, 1.0}};
 		run_LU(3, 3, A);
 	}

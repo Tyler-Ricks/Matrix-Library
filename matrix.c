@@ -2,7 +2,10 @@
 
 // Checklist:
 //        1) potentially add faster paths for non transpose matrices?
-//		  2) implement LU factorization
+//		  2) extend LU factorization to non square matrices?
+//		  3) make fmatrix_col_space more in place?
+//		  4) Look into optimization, especially for multiplication and inverse
+//		  5) Implement a bunch of stuff related to graphics (more specificity on this later)
 //
 
 // allocates m by n blocks of memory of a given size in a pool, returns a struct with a pointer to it,
@@ -829,11 +832,10 @@ fmatrix fmatrix_row_space(fmatrix mat, pool* frame) {
 // A partial pivot matrix is simply an identity matrix that has undergone row swaps. In this case, the row swaps we do correspond to the row
 // swaps required to get A to be able to be row reduced to an upper triangular matrix. For matrices that need no row swaps, P is just identity
 // 
-// This function takes in mat, and returns an array of fmatrix pointers, with the first one being P, the second being L and the third being U
-// Works for matrices that require partial pivoting, but not non-square matrices for now
+// This function takes in mat, and populates an fmatrix array, with the first element being P, the second being L and the third being U
+// Works for matrices that require partial pivoting, but not non-square matrices FOR NOW
 // In the case that no LU factorization exists, (mat is "rank-deficient") free data from pool starting from U.matrix, then return NULL.
-// For now
-fmatrix* fmatrix_LU_factorize(fmatrix mat, pool* frame) {
+fmatrix* fmatrix_LU_factorize(fmatrix mat, fmatrix PLU[3], pool* frame) {
 	if (mat.m != mat.n) { return NULL; } // does not handle rectangular matrices for now
 
 	// initialize P, L, and U
@@ -869,14 +871,10 @@ fmatrix* fmatrix_LU_factorize(fmatrix mat, pool* frame) {
 			L.matrix[INDEX_AT(L, j, i)] = k;
 		}
 	}
-	printf("P:\n");
-	print_fmatrix(P);
-	printf("\nL:\n");
-	print_fmatrix(L);
-	printf("\nU:\n");
-	print_fmatrix(U);
-	printf("\nA = PLU:\n");
-	print_fmatrix(fmatrix_multiply(P, fmatrix_multiply(L, U, frame), frame));
 
-	return NULL;
+	PLU[0] = P;
+	PLU[1] = L;
+	PLU[2] = U;
+
+	return 1;
 }
