@@ -15,7 +15,7 @@
 // pointer for the matrix, and is not a transpose
 //
 // fmatrix A = create_fmatrix(3, 3, matA, &frame);
-fmatrix create_fmatrix(int m, int n, float* matrix, pool* frame) {
+fmatrix create_fmatrix(int m, int n, float** matrix, pool* frame) {
 	if (m < 0 || n < 0) {
 		printf("fmatrix must have positive row/columns\n");
 		return ERROR_FMATRIX;
@@ -554,11 +554,11 @@ void fmatrix_col_swap_in(fmatrix mat, int col1, int col2) {
 fmatrix fmatrix_col_swap(fmatrix mat, int col1, int col2, pool* frame) {
 	if (col1 >= mat.m || col1 < 0) {
 		printf("col_swap error: \ncol1 %d out of bounds (make sure you are 0-indexed)\n", col1);
-		return;
+		return ERROR_FMATRIX;
 	}
 	if (col2 >= mat.m || col2 < 0) {
 		printf("col_swap error: \ncol2 %d out of bounds (make sure you are 0-indexed)\n", col2);
-		return;
+		return ERROR_FMATRIX;
 	}
 
 	fmatrix result = fmatrix_copy_alloc(mat, frame);
@@ -586,11 +586,11 @@ void fmatrix_col_sum_in(fmatrix mat, int dest, float c1, int src, float c2) {
 fmatrix fmatrix_col_sum(fmatrix mat, int dest, float c1, int src, float c2, pool *frame) {
 	if (dest >= mat.m || dest < 0) {
 		printf("col_sum error: \ndest col %d out of bounds (make sure you are 0-indexed)\n", dest);
-		return;
+		return ERROR_FMATRIX;
 	}
 	if (src >= mat.m || src < 0) {
 		printf("col_sum error: \nsrc col %d out of bounds (make sure you are 0-indexed)\n", src);
-		return;
+		return ERROR_FMATRIX;
 	}
 
 	fmatrix result = fmatrix_copy_alloc(mat, frame);
@@ -715,7 +715,7 @@ fmatrix fmatrix_inverse(fmatrix mat, pool* frame) {
 			fmatrix_row_swap_in(result, i, pivot_row);				// do it for the result matrix as well
 		}
 
-		float normalize = 1.0 / MATRIX_AT(mat_copy, i, i);
+		float normalize = 1.0f / MATRIX_AT(mat_copy, i, i);
 		fmatrix_row_scale_in(mat_copy, i, normalize);				// set the pivot to 1 by scaling its row
 		fmatrix_row_scale_in(result, i, normalize);
 		
@@ -724,8 +724,8 @@ fmatrix fmatrix_inverse(fmatrix mat, pool* frame) {
 			if(i == j) { continue; }								// don't eliminate the pivot
 			row_value = MATRIX_AT(mat_copy, j, i);
 			if(row_value == 0){ continue; }							// no elimination necessary
-			fmatrix_row_sum_in(mat_copy, j, 1.0, i, -row_value);	// eliminate the element
-			fmatrix_row_sum_in(result,	 j, 1.0, i, -row_value);
+			fmatrix_row_sum_in(mat_copy, j, 1.0f, i, -row_value);	// eliminate the element
+			fmatrix_row_sum_in(result,	 j, 1.0f, i, -row_value);
 		}
 	}
 
@@ -798,7 +798,7 @@ fmatrix fmatrix_col_space(fmatrix mat, pool* frame) {
 	// if the rank is 0 (mat is the 0 matrix), then return {0}
 	// The span of the columns of a 0 matrix is just 0
 	if (rank == 0) {
-		float zero[1][1] = {{0.0}};
+		float zero[1][1] = {{0.0f}};
 		fmatrix result = create_fmatrix(1, 1, zero, frame);
 		return result;
 	}
@@ -828,9 +828,11 @@ fmatrix fmatrix_row_space(fmatrix mat, pool* frame) {
 
 
 // Technically, this function does PLU factorization
-// A = PLU such that L is lower triangular, U is upper triangular, and P is a partial pivot matrix
-// A partial pivot matrix is simply an identity matrix that has undergone row swaps. In this case, the row swaps we do correspond to the row
+// PA = LU such that L is lower triangular, U is upper triangular, and P is a permutation matrix
+// A permutation matrix is simply an identity matrix that has undergone row swaps. In this case, the row swaps we do correspond to the row
 // swaps required to get A to be able to be row reduced to an upper triangular matrix. For matrices that need no row swaps, P is just identity
+// For this function, we technically return the inverse of P, so we can have A = P^-1LU. P is orthogonal, so its inverse is its transpose.
+// So, instead of performing row swaps on it, we do column swaps
 // 
 // This function takes in mat, and populates an fmatrix array, with the first element being P, the second being L and the third being U
 // Works for matrices that require partial pivoting, but not non-square matrices FOR NOW
@@ -859,8 +861,8 @@ fmatrix* fmatrix_LU_factorize(fmatrix mat, fmatrix PLU[3], pool* frame) {
 			return NULL;
 		}
 		if (pivot_row != i) {						// pivot row is found, but requires a pivot (row swap)
-			fmatrix_row_swap_in(U, i, pivot_row);
-			fmatrix_row_swap_in(P, i, pivot_row);	// track row swaps in the permutation/pivot matrix P
+			fmatrix_row_swap_in(U, i, pivot_row);	// track row swaps in the permutation/pivot matrix P
+			fmatrix_col_swap_in(P, i, pivot_row);	// swap columns instead. The inverse of P is its transpose (it's orthogonal)
 		}
 		pivot_value = MATRIX_AT(U, i, i);
 
@@ -880,4 +882,19 @@ fmatrix* fmatrix_LU_factorize(fmatrix mat, fmatrix PLU[3], pool* frame) {
 	PLU[2] = U;
 
 	return PLU;
+}
+
+// You can solve a system of n equations in n variables quickly using LU factorization. 
+// let Ax = b (A and b are given, A is m x m, and b = m x 1)
+// let A = LU (where L is lower triangular, and U is upper triangular)
+// so: LUx = b
+// let y = Ux
+// so: Ly = b
+// L is lower triangular, so it is easy to solve for y in Ly = b
+// Ux = y
+// U is upper triangular, and y is now known, so it is easy to solve for x
+// 
+// Takes in m x m matrix A, m x 1 vector b, then returns an m x 1 vector x
+fmatrix fmatrix_LU_solve(fmatrix A, fmatrix b, pool* frame) {
+
 }

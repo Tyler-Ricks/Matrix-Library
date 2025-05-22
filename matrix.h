@@ -67,7 +67,7 @@ typedef struct{
 	uint8_t padding[3];
 }fmatrix;
 
-fmatrix create_fmatrix(int m, int n, float* matrix, pool *frame);
+fmatrix create_fmatrix(int m, int n, float** matrix, pool *frame);
 fmatrix fmatrix_create_identity(int m, int n, pool* frame);
 
 void print_fmatrix(fmatrix mat);
