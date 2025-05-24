@@ -770,7 +770,7 @@ test_LU_solve() {
 }
 
 int main() {
-	switch(15){
+	switch(14){
 	case 1:
 		test_transpose();
 		break;

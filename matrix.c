@@ -6,6 +6,11 @@
 //		  3) make fmatrix_col_space more in place?
 //		  4) Look into optimization, especially for multiplication and inverse
 //		  5) Implement a bunch of stuff related to graphics (more specificity on this later)
+//				- Vulkan works with column major order???? Lots of refactoring needed
+//				- implement vector specific operations (dot product, cross product, normalization)
+//				- specific matrices (perspective, scale/rotate/translate, lookAt, etc)
+//				- quaternions?
+//				- 
 //
 
 // allocates m by n blocks of memory of a given size in a pool, returns a struct with a pointer to it,
@@ -50,7 +55,7 @@ fmatrix fmatrix_create_identity(int m, int n, pool* frame) {
 		printf("pool allocation for identity matrix failed, returning error matrix");
 		return ERROR_FMATRIX;
 	}
-
+	
 	fmatrix mat = (fmatrix) {m, n, matrix, 0};
 
 	// initialize all values to 0 except where i = j

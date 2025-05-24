@@ -9,11 +9,21 @@
 
 #include "memoryPool.h"
 
-// both macros check fmatrix transpose flag. If it's set, then treat mat as a transpose
-// gets the element of the matrix at mat[i][j]
-#define MATRIX_AT(mat, i, j) ((mat.transpose) ? (mat.matrix[(j) * mat.m + (i)]) : (mat.matrix[(i) * mat.n + (j)]))
-// macro to get array index given matrix index
-#define INDEX_AT(mat, i, j) ((mat.transpose) ? ((j) * mat.m + (i)) : ((i) * mat.n + (j)))
+// include -DCMO in compilation to flag that you are in column major order
+// default to row major order
+// these macros handle matrix access, because fmatrices are store purely as arrays
+#ifdef CMO
+	#define MATRIX_AT(mat, i, j) ((mat.transpose) ? (mat.matrix[(i) * mat.n + (j)]) : (mat.matrix[(j) * mat.m + (i)]))
+	#define INDEX_AT(mat, i, j) ((mat.transpose) ? ((i) * mat.n + (j)) : ((j) * mat.m + (i)))
+	#define MAJOR(mat) (mat.n) // columns stored contiguously
+	#define MINOR(mat) (mat.m) // rows stored in stride
+#else
+	#define MATRIX_AT(mat, i, j) ((mat.transpose) ? (mat.matrix[(j) * mat.m + (i)]) : (mat.matrix[(i) * mat.n + (j)]))
+	#define INDEX_AT(mat, i, j) ((mat.transpose) ? ((j) * mat.m + (i)) : ((i) * mat.n + (j)))
+	#define MAJOR(mat) (mat.m) // rows store contiguously
+	#define MINOR(mat) (mat.n) // columns stored in stride
+#endif 
+
 
 // old implementation before transpose flag
 #define OLD_MATRIX_AT(mat, i, j) (mat.matrix[i * mat.n + j])
@@ -63,7 +73,7 @@ typedef struct{
 	float* matrix; 
 	// flag for transpose handling
 	uint8_t transpose;
-	// padding for muh cache
+	// padding for cache
 	uint8_t padding[3];
 }fmatrix;
 
