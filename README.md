@@ -1,9 +1,11 @@
-To help me learn more about github and stuff, please let me know if there are issues with this repository at all! Sometetimes, you can't just
-see problems with what you're doing.
+This is a basic general purpose matrix/linear algebra library. It started off as an exercise, but now I have plan to 
+actually use it in place of glm as I go off and learn Vulkan. 
 
-This is a pretty basic personal project that I'll be working on for a while, but I think I will get a lot of value in the research side of 
-all this. I'll build something simple, then look into something that does it better, but is more complicated, and maybe find that what I've
-built doesn't support this new thing that well. At that point, I hope I'll learn more about refactoring, and also just building a foundation
-that scales. 
+So far, I have basic implementation of basic matrix operations, such as multiplication, inverse, finding determinants,
+and addition/subtraction. I also have PLU factorization worked out for square matrices, alongside using it to solve systems.
 
-Also I like C and it would be cool to do this project with it, so I hope I'll learn a lot about it here too.
+It's a bit clunky to use for now. I wanted to support arbitrary matrix dimensions while still writing it in C, which means 
+dynamic allocation is necessary. However, system calls like malloc are slow, and I wanted to avoid direct allocation anyways
+because chaining matrix operations (ex (P^t)LUx) would cause memory leaks if you wanted to do it all in one line. To 
+circumvent this, matrices are stored on a memory pool, which is allocated prior to declaring matrices, and freed after all
+operations are complete. 
