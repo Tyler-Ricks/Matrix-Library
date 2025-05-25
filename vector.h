@@ -1,25 +1,28 @@
+#ifndef VECTOR_H
+#define VECTOR_H
+
 #include <stdio.h>
 #include <stdlib.h>
+#include "matrix.h"
 #include <math.h>
 
-typedef struct{
-	float x, y, z;
-}vec3;
+float dot(fmatrix u, fmatrix v);
 
-vec3 add(vec3 u, vec3 v);
-vec3 subtract(vec3 u, vec3 v);
-vec3 scale(float c, vec3 v);
+fmatrix cross(fmatrix u, fmatrix v, pool* frame);
 
-float dot(vec3 u, vec3 v);
+float magnitude(fmatrix u);
 
-vec3 cross(vec3 u, vec3 v);
+float distance(fmatrix u, fmatrix v, pool* frame);
 
-float magnitude(vec3 u);
+void normalize_in(fmatrix u);
+fmatrix normalize(fmatrix u, pool* frame);
 
-float distance(vec3 u, vec3 v);
+float angle(fmatrix u, fmatrix v);
 
-vec3 normalize(vec3 u);
+fmatrix proj(fmatrix a, fmatrix b, pool* frame);
+fmatrix proj_n(fmatrix a, fmatrix b, pool* frame);
 
-float angle(vec3 u, vec3 v);
+fmatrix reflect(fmatrix u, fmatrix v, pool* frame);
+fmatrix reflect_n(fmatrix u, fmatrix v, pool* frame);
 
-void printVec3(vec3 u);
+#endif

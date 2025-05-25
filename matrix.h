@@ -54,20 +54,11 @@
 // still like this trick
 
 // To indicate that a matrix should be read in column major order, I'll include a flag in 
-// the fmatrix struct. 
-
-// CHECKLIST:
-// (done) 1) Refactor the macros to support this idea 
-// (done) 5) Make sure matrix multiplication works when multiplying two transposes
-// (done) 3) There's some spots where I opted to not use the macros to remove redundancy. These
-//				Will need to be fixed.
-//		  4) Refactor matrix multiplication to check for transposes for better cache performance
-//				(Do it in a column-major accumulation process so we aren't jumping around the array)
-*/
+// the fmatrix struct. */
 
 // float matrix
 typedef struct{
-	// rows, columns
+	// rows, columns. Regardless of row or column major order, m is rows, n is columns
 	int m, n;
 	// pointer to item at [0,0]
 	float* matrix; 
@@ -79,46 +70,46 @@ typedef struct{
 
 fmatrix create_fmatrix(int m, int n, float* matrix, pool *frame);
 fmatrix fmatrix_create_identity(int m, int n, pool* frame);
-fmatrix fmatrix_create_zero(int m, int n, pool* frame);
+fmatrix fmatrix_create_full(int m, int n, float x, pool* frame);
 
 void print_fmatrix(fmatrix mat);
 void print_fpool(pool *frame);
 
 void print_properties(fmatrix mat);
 void print_as_array(fmatrix mat);
-void print_memory_layout(fmatrix mat);
+//void print_memory_layout(fmatrix mat);
 fmatrix fmatrix_copy_alloc(fmatrix mat, pool *frame);
 fmatrix fmatrix_ncol_copy_alloc(fmatrix mat, int c, pool* frame);
 
 void fswap(float *a, float *b);
 void intswap(int *a, int *b);
 
-void fmatrix_add_in(fmatrix matA, fmatrix matB);
+fmatrix fmatrix_add_in(fmatrix matA, fmatrix matB);
 fmatrix fmatrix_add(fmatrix matA, fmatrix matB, pool *frame);
-void fmatrix_subtract_in(fmatrix matA, fmatrix matB);
+fmatrix fmatrix_subtract_in(fmatrix matA, fmatrix matB);
 fmatrix fmatrix_subtract(fmatrix matA, fmatrix matB, pool *frame);
-void fmatrix_scale_in(fmatrix mat, float c);
+fmatrix fmatrix_scale_in(fmatrix mat, float c);
 fmatrix fmatrix_scale(fmatrix mat, float c, pool *frame);
 
 float get_fmultiplied(fmatrix matA, fmatrix matB, int i, int j);
 void fmatrix_multiply_in(fmatrix matA, fmatrix matB);
 fmatrix fmatrix_multiply(fmatrix matA, fmatrix matB, pool *frame);
 
-void fmatrix_transpose_in(fmatrix *mat);
+fmatrix fmatrix_transpose_in(fmatrix *mat);
 fmatrix fmatrix_transpose(fmatrix mat, pool *frame);
 
-void fmatrix_row_scale_in(fmatrix mat, int row, float c);
+fmatrix fmatrix_row_scale_in(fmatrix mat, int row, float c);
 fmatrix fmatrix_row_scale(fmatrix mat, int row, float c, pool *frame);
-void fmatrix_row_swap_in(fmatrix mat, int row1, int row2);
+fmatrix fmatrix_row_swap_in(fmatrix mat, int row1, int row2);
 fmatrix fmatrix_row_swap(fmatrix mat, int row1, int row2, pool *frame);
-void fmatrix_row_sum_in(fmatrix mat, int dest, float c1, int src, float c2);
+fmatrix fmatrix_row_sum_in(fmatrix mat, int dest, float c1, int src, float c2);
 fmatrix fmatrix_row_sum(fmatrix mat, int dest, float c1, int src, float c2, pool *frame);
 
-void fmatrix_col_scale_in(fmatrix mat, int col, float c);
+fmatrix fmatrix_col_scale_in(fmatrix mat, int col, float c);
 fmatrix fmatrix_col_scale(fmatrix mat, int col, float c, pool *frame);
-void fmatrix_col_swap_in(fmatrix mat, int col1, int col2);
+fmatrix fmatrix_col_swap_in(fmatrix mat, int col1, int col2);
 fmatrix fmatrix_col_swap(fmatrix mat, int col1, int col2, pool *frame);
-void fmatrix_col_sum_in(fmatrix mat, int dest, float c1, int src, float c2);
+fmatrix fmatrix_col_sum_in(fmatrix mat, int dest, float c1, int src, float c2);
 fmatrix fmatrix_col_sum(fmatrix mat, int dest, float c1, int src, float c2, pool *frame);
 
 int find_pivot_row(fmatrix mat, int pivot_row, int col);

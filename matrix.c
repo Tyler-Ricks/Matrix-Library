@@ -69,8 +69,8 @@ fmatrix fmatrix_create_identity(int m, int n, pool* frame) {
 	return mat;
 }
 
-// creates an m x n matrix with all elements set to 0.
-fmatrix fmatrix_create_zero(int m, int n, pool* frame) {
+// creates an m x n matrix with all elements set to x.
+fmatrix fmatrix_create_full(int m, int n, float x, pool* frame) {
 	if (m < 0 || n < 0) {
 		printf("fmatrix must have positive row/columns\n");
 		return ERROR_FMATRIX;
@@ -100,10 +100,16 @@ fmatrix fmatrix_create_zero(int m, int n, pool* frame) {
 
 // Utilities
 
-// prints an input matrix in row major order.
-//
+// prints an input matrix in row major order, regardless of if we are in RMO or CMO
+// 
 // print_fmatrix(matA);
 void print_fmatrix(fmatrix mat) {
+	/*for (int i = 0; i < mat.m; i++) {
+		for (int j = 0; j < mat.n; j++) {
+			printf("%4.3f ", MATRIX_AT(mat, i, j));
+		}
+		printf("\n");
+	}*/
 	for (int i = 0; i < mat.m; i++) {
 		for (int j = 0; j < mat.n; j++) {
 			printf("%4.3f ", MATRIX_AT(mat, i, j));
@@ -130,28 +136,14 @@ void print_properties(fmatrix mat) {
 	printf("\nA.m: %d, A.n: %d, A.tranpose: %d\n", mat.m, mat.n, mat.transpose);
 }
 
-// simply prints a matrix as a an array.
-// useful for making sure transpose reading is working properly
+// simply prints a matrix as an array, how it is stored in memory
 //
 // print_as_array(matAt);
 void print_as_array(fmatrix mat) {
-
-	for(int i = 0; i < mat.m; i++){
-		for (int j = 0; j < mat.n; j++) {
-			printf("%g ", MATRIX_AT(mat, i, j));
-		}
+	int count = mat.m * mat.n;
+	for (int i = 0; i < count; i++) {
+		printf("%g ", mat.matrix[i]);
 	}
-	printf("\n");
-}
-
-void print_memory_layout(fmatrix mat) {
-	int size = mat.m * mat.n;
-
-	for (int i = 0; i < size; i++) {
-		printf("%f ", mat.matrix[i]);
-	}
-
-	printf("\n");
 }
 
 // takes an exisitng matrix, allocates space for a clone, copies its properties, and returns a deep copy
@@ -219,10 +211,10 @@ void intswap(int* a, int* b) {
 
 // from here on out, there are inplace versions of most functions. These do the same thing as their non inplace 
 // counterparts, but they store their results in one of the inputs, avoiding extra memory allocation.
-// Also, upon failure, an error message is printed, and no change is made to the inputs, rather than returning 
-// an ERROR_FMATRIX.
+// Also, upon failure, an error message is printed, and no change is made to the inputs.
 // Keep in mind that many of the non inplace variants actually use the inplace version after copying one of
 // their inputs.
+// inplace versions also return their results
 
 
 // Basic matrix operations
@@ -230,17 +222,19 @@ void intswap(int* a, int* b) {
 // Adds two input matrices into matA, given that they have the same dimensions
 // 
 // fmatrix_add_in(A, B);
-void fmatrix_add_in(fmatrix matA, fmatrix matB) {
+fmatrix fmatrix_add_in(fmatrix matA, fmatrix matB) {
 	if (matA.m != matB.m || matA.n != matB.n) {
 		printf("error while adding: \ndimension mismatch: ");
 		printf("matrix a: (%d x %d)  matrix b: (%d x %d)\n", matA.m, matA.n, matB.m, matB.n);
-		return;
+		return ERROR_FMATRIX;
 	}
 	for(int i = 0; i < matB.m; i++){
 		for (int j = 0; j < matA.n; j++) {
 			matA.matrix[INDEX_AT(matA, i, j)] += matB.matrix[INDEX_AT(matB, i, j)];
 		}
 	}
+
+	return matA;
 }
 
 // fmatrix sumAB = fmatrix_add(A, B, &frame)
@@ -271,17 +265,19 @@ fmatrix fmatrix_add(fmatrix matA, fmatrix matB, pool *frame) {
 // subtracts values of matB from values of matA, given that they have the same dimensions
 // 
 // fmatrix_subtract_in(A, B);
-void fmatrix_subtract_in(fmatrix matA, fmatrix matB) {
+fmatrix fmatrix_subtract_in(fmatrix matA, fmatrix matB) {
 	if (matA.m != matB.m || matA.n != matB.n) {
 		printf("error while adding: \ndimension mismatch: ");
 		printf("matrix a: (%d x %d)  matrix b: (%d x %d)\n", matA.m, matA.n, matB.m, matB.n);
-		return;
+		return ERROR_FMATRIX;
 	}
 	for(int i = 0; i < matB.m; i++){
 		for (int j = 0; j < matA.n; j++) {
 			matA.matrix[INDEX_AT(matA, i, j)] -= matB.matrix[INDEX_AT(matB, i, j)];
 		}
 	}
+
+	return matA;
 }
 
 // fmatrix diffAB = fmatrix_subtract_in(A, B);
@@ -313,13 +309,16 @@ fmatrix fmatrix_subtract(fmatrix matA, fmatrix matB, pool *frame) {
 // if c = 1 or c = 0, it tries to save time by following a different proceedure
 //
 // fmatrix_scale_in(A, 2.5);
-void fmatrix_scale_in(fmatrix mat, float c) {
-	if(c == 1.0) { return; }
+fmatrix fmatrix_scale_in(fmatrix mat, float c) {
+	if(c == 1.0) { return mat; }
 	int size = mat.m * mat.n;
-	if(c == 0.0) { memset(mat.matrix, 0, size); return; }
+	if(c == 0.0) { memset(mat.matrix, 0.0f, size); return mat; }
 
-	for(int i = 0; i < size; i++)
+	for(int i = 0; i < size; i++){
 		mat.matrix[i] *= c;
+	}
+
+	return mat;
 }
 
 // fmatrix scaledA = fmatrix_scale_in(A, 2.5);
@@ -403,12 +402,14 @@ fmatrix fmatrix_multiply(fmatrix matA, fmatrix matB, pool *frame) {
 // in this library. Hence why I want to have both implementations
 //  
 // the inplace version is also useful for implementing column operations later
+// I opt to return a dereferenced mat pointer, so we can chain functions as normal
 //
 // fmatrix_transpose_int(&A);
-void fmatrix_transpose_in(fmatrix *mat) {
+fmatrix fmatrix_transpose_in(fmatrix *mat) {
 	// swaps m and n, and marks mat as a transpose
 	intswap(&mat->m, &mat->n);
 	mat->transpose = !mat->transpose;
+	return *mat;
 }
 
 // fmatrix At = fmatrix_transpose(A, &frame);
@@ -427,19 +428,21 @@ fmatrix fmatrix_transpose(fmatrix mat, pool* frame) {
 // tries to save on time if c = 0 or c = 1
 //
 // fmatrix_row_scale_in(A, 0, 2.5); // scales elements of row 1 by 2.5
-void fmatrix_row_scale_in(fmatrix mat, int row, float c) {
+fmatrix fmatrix_row_scale_in(fmatrix mat, int row, float c) {
 	if (row >= mat.m || row < 0) {
 		printf("row_scale error: \nrow %d out of bounds (make sure you are 0-indexed)\n", row);
-		return;
+		return ERROR_FMATRIX;
 	}
 	if (c == 1.0) { return; }
 	if (c == 0.0 && !mat.transpose) { 
 		memset(&mat.matrix[INDEX_AT(mat, row, 0)], 0, mat.n * sizeof(float)); 
-		return; 
+		return ERROR_FMATRIX; 
 	}
 
 	for (int i = 0; i < mat.n; i++) 
 		mat.matrix[INDEX_AT(mat, row, i)] *= c;
+
+	return mat;
 }
 
 // fmatrix scaleR1 = fmatrix_row_scale(A, 0, 2.5), &frame; // scales elements of row 1 by 2.5
@@ -459,14 +462,14 @@ fmatrix fmatrix_row_scale(fmatrix mat, int row, float c, pool *frame) {
 // swaps elements of row1 of mat with elements of row2
 //
 // fmatrix_row_swap_in(A, 0, 2); // swaps R1 and R2 of A
-void fmatrix_row_swap_in(fmatrix mat, int row1, int row2) {
+fmatrix fmatrix_row_swap_in(fmatrix mat, int row1, int row2) {
 	if (row1 >= mat.m || row1 < 0) {
 		printf("row_swap error: \nrow1 %d out of bounds (make sure you are 0-indexed)\n", row1);
-		return;
+		return ERROR_FMATRIX;
 	}
 	if (row2 >= mat.m || row2 < 0) {
 		printf("row_swap error: \nrow2 %d out of bounds (make sure you are 0-indexed)\n", row2);
-		return;
+		return ERROR_FMATRIX;
 	}
 
 	if(row1 == row2){ return; } // no change necessary
@@ -475,6 +478,8 @@ void fmatrix_row_swap_in(fmatrix mat, int row1, int row2) {
 		fswap(&mat.matrix[INDEX_AT(mat, row1, i)], 
 			  &mat.matrix[INDEX_AT(mat, row2, i)]);
 	}
+
+	return mat;
 }
 
 // fmatrix swapR12 = fmatrix_row_swap(A, 0, 2, &frame); // swaps R1 and R2 of A
@@ -499,14 +504,14 @@ fmatrix fmatrix_row_swap(fmatrix mat, int row1, int row2, pool *frame) {
 // tries to save time if c1 or c2 equal 0
 //
 // fmatrix_row_sum_in(A, 0, 3, 1, 0.5) // R1 <- 3R1 + 0.5R2
-void fmatrix_row_sum_in(fmatrix mat, int dest, float c1, int src, float c2) {
+fmatrix fmatrix_row_sum_in(fmatrix mat, int dest, float c1, int src, float c2) {
 	if (dest >= mat.m || dest < 0) {
 		printf("row_sum error: dest row %d out of bounds (make sure you are 0-indexed)\n", dest);
-		return;
+		return ERROR_FMATRIX;
 	}
 	if (src >= mat.m || src < 0) {
 		printf("row_sum error: src row %d out of bounds (make sure you are 0-indexed)\n", src);
-		return;
+		return ERROR_FMATRIX;
 	}
 
 	float value;
@@ -517,6 +522,8 @@ void fmatrix_row_sum_in(fmatrix mat, int dest, float c1, int src, float c2) {
 		// result[INDEX_AT(mat, dest, i)] = (c1 * (MATRIX_AT(mat, dest, i))) + (c2 * (MATRIX_AT(mat, src, i)));
 		mat.matrix[INDEX_AT(mat, dest, i)] = value;
 	}
+
+	return mat;
 }
 
 // fmatrix A2 = fmatrix_row_sum(A, 0, 3, 1, 0.5) // R1 <- 3R1 + 0.5R2
@@ -544,15 +551,17 @@ fmatrix fmatrix_row_sum(fmatrix mat, int dest, float c1, int src, float c2, pool
 // transpose could be
 
 // scales elements of a column by a factor of c
-void fmatrix_col_scale_in(fmatrix mat, int col, float c) {
+fmatrix fmatrix_col_scale_in(fmatrix mat, int col, float c) {
 	if (col >= mat.n || col < 0) {
 		printf("col_scale error: \ncol %d out of bounds (make sure you are 0-indexed)\n", col);
-		return;
+		return ERROR_FMATRIX;
 	}
 
 	fmatrix_transpose_in(&mat);
 	fmatrix_row_scale_in(mat, col, c);
 	fmatrix_transpose_in(&mat);
+
+	return mat;
 }
 
 fmatrix fmatrix_col_scale(fmatrix mat, int col, float c, pool* frame) {
@@ -564,18 +573,18 @@ fmatrix fmatrix_col_scale(fmatrix mat, int col, float c, pool* frame) {
 	fmatrix result = fmatrix_copy_alloc(mat, frame);
 	if(!result.matrix){ return result; }
 
-	fmatrix_col_scale_in(mat, col, c);
+	fmatrix_col_scale_in(result, col, c);
 	return result;
 }
 
-void fmatrix_col_swap_in(fmatrix mat, int col1, int col2) {
+fmatrix fmatrix_col_swap_in(fmatrix mat, int col1, int col2) {
 	if (col1 >= mat.m || col1 < 0) {
 		printf("col_swap error: \ncol1 %d out of bounds (make sure you are 0-indexed)\n", col1);
-		return;
+		return ERROR_FMATRIX;
 	}
 	if (col2 >= mat.m || col2 < 0) {
 		printf("col_swap error: \ncol2 %d out of bounds (make sure you are 0-indexed)\n", col2);
-		return;
+		return ERROR_FMATRIX;
 	}
 
 	if(col1 == col2){ return; } // no change necessary
@@ -583,6 +592,8 @@ void fmatrix_col_swap_in(fmatrix mat, int col1, int col2) {
 	fmatrix_transpose_in(&mat);
 	fmatrix_row_swap_in(mat, col1, col2);
 	fmatrix_transpose_in(&mat);
+
+	return mat;
 }
 
 fmatrix fmatrix_col_swap(fmatrix mat, int col1, int col2, pool* frame) {
@@ -602,19 +613,21 @@ fmatrix fmatrix_col_swap(fmatrix mat, int col1, int col2, pool* frame) {
 	return result;
 }
 
-void fmatrix_col_sum_in(fmatrix mat, int dest, float c1, int src, float c2) {
+fmatrix fmatrix_col_sum_in(fmatrix mat, int dest, float c1, int src, float c2) {
 	if (dest >= mat.m || dest < 0) {
 		printf("col_sum error: \ndest col %d out of bounds (make sure you are 0-indexed)\n", dest);
-		return;
+		return ERROR_FMATRIX;
 	}
 	if (src >= mat.m || src < 0) {
 		printf("col_sum error: \nsrc col %d out of bounds (make sure you are 0-indexed)\n", src);
-		return;
+		return ERROR_FMATRIX;
 	}
 
 	fmatrix_transpose_in(&mat);
 	fmatrix_row_sum_in(mat, dest, c1, src, c2);
 	fmatrix_transpose_in(&mat);
+
+	return mat;
 }
 
 fmatrix fmatrix_col_sum(fmatrix mat, int dest, float c1, int src, float c2, pool *frame) {
@@ -832,7 +845,7 @@ fmatrix fmatrix_col_space(fmatrix mat, pool* frame) {
 	// if the rank is 0 (mat is the 0 matrix), then return {0}
 	// The span of the columns of a 0 matrix is just 0
 	if (rank == 0) {
-		float zero[1][1] = {{0.0f}};
+		float zero[1] = {0.0f};
 		fmatrix result = create_fmatrix(1, 1, zero, frame);
 		return result;
 	}
@@ -949,9 +962,9 @@ fmatrix fmatrix_LU_solve(fmatrix A, fmatrix b, pool* frame) {
 	fmatrix U = PLU[2];
 
 	// allocate space for x and y, but do x first so we can free up y at the end
-	fmatrix x = fmatrix_create_zero(A.m, 1, frame);
+	fmatrix x = fmatrix_create_full(A.m, 1, 0.0f, frame);
 	if (x.matrix == NULL) {return ERROR_FMATRIX; }
-	fmatrix y = fmatrix_create_zero(A.m, 1, frame);
+	fmatrix y = fmatrix_create_full(A.m, 1, 0.0f, frame);
 	if (y.matrix == NULL) { 
 		pool_free_from(frame, x.matrix);
 		return ERROR_FMATRIX; 
