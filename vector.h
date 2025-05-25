@@ -14,7 +14,7 @@ float magnitude(fmatrix u);
 
 float distance(fmatrix u, fmatrix v, pool* frame);
 
-void normalize_in(fmatrix u);
+fmatrix normalize_in(fmatrix u);
 fmatrix normalize(fmatrix u, pool* frame);
 
 float angle(fmatrix u, fmatrix v);

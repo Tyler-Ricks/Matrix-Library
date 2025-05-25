@@ -50,15 +50,17 @@ float distance(fmatrix u, fmatrix v, pool* frame) {
 	return dist;
 }
 
-void normalize_in(fmatrix u) {
+fmatrix normalize_in(fmatrix u) {
 	if (u.n != 1) {
 		printf("you may only normalize vectors!\n");
-		return;
+		return ERROR_FMATRIX;
 	}
 	float m = magnitude(u);
 	for (int i = 0; i < u.m; i++) {
 		u.matrix[i] /= m;
 	}
+
+	return u;
 }
 
 fmatrix normalize(fmatrix u, pool* frame) {
