@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="graphics_tools.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="matrix.c" />
     <ClCompile Include="memoryPool.c" />
@@ -26,6 +27,7 @@
     <ClCompile Include="vector.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="graphics_tools.h" />
     <ClInclude Include="matrix.h" />
     <ClInclude Include="memoryPool.h" />
     <ClInclude Include="testing.h" />
