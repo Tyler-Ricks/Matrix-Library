@@ -10,10 +10,10 @@
 // for now, implement for vulkan, but use macros for more flexibility
 
 fmatrix ortho_proj_plane  (float l, float r, float b, float t, float n, float f, pool* frame);
-fmatrix ortho_proj_plane_c(float r, float b, float n, float f, pool* frame);
+fmatrix ortho_proj_plane_c(float r,			 float b,		   float n, float f, pool* frame);
 
 fmatrix persp_proj_plane  (float l, float r, float b, float t, float n, float f, pool* frame);
-fmatrix persp_proj_plane_c(float r, float b, float n, float f, pool* frame);
-fmatrix persp_proj_fov(float w, float h, float n, float f, float theta, pool* frame);
+fmatrix persp_proj_plane_c(float r,			 float b,		   float n, float f, pool* frame);
+fmatrix persp_proj_fov	  (float w, float h, float theta,	   float n, float f, pool* frame);
 
 #endif GRAPHICS_TOOLS_H

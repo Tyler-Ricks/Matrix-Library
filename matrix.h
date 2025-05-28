@@ -7,7 +7,7 @@
 #include <math.h>
 #include <stdint.h>
 
-#include "memoryPool.h"
+#include "memory_pool.h"
 
 // include -DCMO in compilation to flag that you are in column major order
 // default to row major order

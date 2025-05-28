@@ -18,10 +18,7 @@
     <ClCompile Include="vector.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="matrix.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="memoryPool.c">
+    <ClCompile Include="memory_pool.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="main.c">
@@ -33,6 +30,15 @@
     <ClCompile Include="graphics_tools.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="matrix_ops.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="matrix_create.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="matrix_util.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vector.h">
@@ -41,7 +47,7 @@
     <ClInclude Include="matrix.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="memoryPool.h">
+    <ClInclude Include="memory_pool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="testing.h">

@@ -1,5 +1,17 @@
 #include "matrix.h"
 
+// This file contains general matrix operations:
+//	- matrix addition/subtraction
+//	- row/column operations
+//  - matrix multiplication
+//	- transpose
+//	- inverse
+//	- determinants
+//	- row/column space 
+//	- LU factorization (for square matrices)
+//	- solving systems (for square matrices)
+//
+
 // Checklist:
 //        1) potentially add faster paths for non transpose matrices?
 //		  2) extend LU factorization to non square matrices?
@@ -13,180 +25,6 @@
 //				- 
 //
 
-// allocates m by n blocks of memory of a given size in a pool, returns a struct with a pointer to it,
-// the dimensions of the matrix, and if it is a transpose or not.
-// Used for adding a matrix to the pool so you can start doing operations to it.
-// failure returns the ERROR_FMATRIX, (macro located in matrix.h) which has 0 rows, 0 cols, a NULL
-// pointer for the matrix, and is not a transpose
-//
-// fmatrix A = create_fmatrix(3, 3, matA, &frame);
-fmatrix create_fmatrix(int m, int n, float* matrix, pool* frame) {
-	if (m < 0 || n < 0) {
-		printf("fmatrix must have positive row/columns\n");
-		return ERROR_FMATRIX;
-	}
-	if (!frame || !frame->start) {
-		printf("failed to create matrix (faulty input frame). Returning empty matrix\n");
-		return ERROR_FMATRIX;
-	}
-
-	if ((matrix = pool_alloc(frame, matrix, m * n * sizeof(float))) == NULL) {
-		printf("pool allocation for matrix failed, returing empty matrix\n");
-		return ERROR_FMATRIX;
-	}
-	// initially not a transpose, so field starts as 0
-	return (fmatrix) {m, n, matrix, 0};
-}
-
-// returns an identity matrix of size m x n, allocated on frame
-// returns ERROR_FMATRIX upon failure
-fmatrix fmatrix_create_identity(int m, int n, pool* frame) {
-	if (m < 0 || n < 0) {
-		printf("fmatrix must have positive row/columns\n");
-		return ERROR_FMATRIX;
-	}
-	if (!frame || !frame->start) {
-		printf("failed to create matrix (faulty input frame). Returning empty matrix\n");
-		return ERROR_FMATRIX;
-	}
-
-	float* matrix = raw_pool_alloc(frame, m * n * sizeof(float));
-	if (matrix == NULL) {
-		printf("pool allocation for identity matrix failed, returning error matrix");
-		return ERROR_FMATRIX;
-	}
-	
-	fmatrix mat = (fmatrix) {m, n, matrix, 0};
-
-	// initialize all values to 0 except where i = j
-	for (int i = 0; i < m; i++) {
-		for (int j = 0; j < n; j++) {
-			if(i == j){ matrix[INDEX_AT(mat, i, j)] = 1.0f; }
-			else{ matrix[INDEX_AT(mat, i, j)] = 0.0f; }
-		}
-	}
-
-	return mat;
-}
-
-// creates an m x n matrix with all elements set to x.
-fmatrix fmatrix_create_full(int m, int n, float x, pool* frame) {
-	if (m < 0 || n < 0) {
-		printf("fmatrix must have positive row/columns\n");
-		return ERROR_FMATRIX;
-	}
-	if (!frame || !frame->start) {
-		printf("failed to create matrix (faulty input frame). Returning empty matrix\n");
-		return ERROR_FMATRIX;
-	}
-
-	float* matrix = raw_pool_alloc(frame, m * n * sizeof(float));
-	if (matrix == NULL) {
-		printf("pool allocation for identity matrix failed, returning error matrix");
-		return ERROR_FMATRIX;
-	}
-
-	fmatrix mat = (fmatrix) {m, n, matrix, 0};
-
-	// initialize all values to 0 except where i = j
-	for (int i = 0; i < m; i++) {
-		for (int j = 0; j < n; j++) {
-			matrix[INDEX_AT(mat, i, j)] = 0.0f;
-		}
-	}
-
-	return mat;
-}
-
-// Utilities
-
-// prints an input matrix in row major order, regardless of if we are in RMO or CMO
-// 
-// print_fmatrix(matA);
-void print_fmatrix(fmatrix mat) {
-	/*for (int i = 0; i < mat.m; i++) {
-		for (int j = 0; j < mat.n; j++) {
-			printf("%4.3f ", MATRIX_AT(mat, i, j));
-		}
-		printf("\n");
-	}*/
-	for (int i = 0; i < mat.m; i++) {
-		for (int j = 0; j < mat.n; j++) {
-			printf("%4.3f ", MATRIX_AT(mat, i, j));
-		}
-		printf("\n");
-	}
-}
-
-// prints floats from a pool linearly
-// used for debugging weird memory things, or tracking how transposes are stored
-//
-// printf("contents of frame:\n");
-// print_pool(&frame);
-void print_fpool(pool *frame) {
-	for (int i = 0; i < (float*)frame->ptr - (float*)frame->start; i++) {
-		printf("%g ", ((float*) frame->start)[i]);
-	}
-}
-
-// prints the row and column count of mat, as well as if it's a transpose
-//
-// print_properties(matAt);
-void print_properties(fmatrix mat) {
-	printf("\nA.m: %d, A.n: %d, A.tranpose: %d\n", mat.m, mat.n, mat.transpose);
-}
-
-// simply prints a matrix as an array, how it is stored in memory
-//
-// print_as_array(matAt);
-void print_as_array(fmatrix mat) {
-	int count = mat.m * mat.n;
-	for (int i = 0; i < count; i++) {
-		printf("%g ", mat.matrix[i]);
-	}
-}
-
-// takes an exisitng matrix, allocates space for a clone, copies its properties, and returns a deep copy
-// used to reduce how verbose non inplace functions are, because many of them shared this procedure 
-//
-// copyA = fmatrix_copy_alloc(matA, &frame);
-fmatrix fmatrix_copy_alloc(fmatrix mat, pool* frame) {
-	int size = mat.m * mat.n * sizeof(float);
-	float* result;
-
-	if ((result = (float*)raw_pool_alloc(frame, size)) == NULL) {
-		printf("error while allocating matrix\n");
-		return ERROR_FMATRIX;
-	}
-
-	memcpy(result, mat.matrix, size);
-
-	return (fmatrix) { mat.m, mat.n, result, mat.transpose};
-}
-
-// takes an exisitng fmatrix and a number of columns to copy, then creates a new fmatrix with 
-// the first c columns of mat, allocated on frame
-// for now, it does not retain mat's transpose state
-fmatrix fmatrix_ncol_copy_alloc(fmatrix mat, int c, pool* frame) {
-	int size = mat.m * c;
-	float* result = (float*)raw_pool_alloc(frame, size * sizeof(float));
-
-	if (result  == NULL) {
-		printf("error while allocating matrix\n");
-		return ERROR_FMATRIX;
-	}
-
-	int offset; // for accessing result array linearly from a nested for loop
-	for (int i = 0; i < mat.m; i++) {
-		offset = i * c;
-		for (int j = 0; j < c; j++) {
-			result[offset + j] = MATRIX_AT(mat, i, j);
-			//result[offset + j] = mat.transpose ?  MATRIX_AT(mat, j, i) : MATRIX_AT(mat, i, j);
-		}
-	}
-
-	return (fmatrix) { mat.m, c, result, 0};
-}
 
 // swaps the values of floats located at a and b
 // used for a few row operations
@@ -476,7 +314,7 @@ fmatrix fmatrix_row_swap_in(fmatrix mat, int row1, int row2) {
 
 	for (int i = 0; i < mat.n; i++) {
 		fswap(&mat.matrix[INDEX_AT(mat, row1, i)], 
-			  &mat.matrix[INDEX_AT(mat, row2, i)]);
+			&mat.matrix[INDEX_AT(mat, row2, i)]);
 	}
 
 	return mat;
@@ -765,7 +603,7 @@ fmatrix fmatrix_inverse(fmatrix mat, pool* frame) {
 		float normalize = 1.0f / MATRIX_AT(mat_copy, i, i);
 		fmatrix_row_scale_in(mat_copy, i, normalize);				// set the pivot to 1 by scaling its row
 		fmatrix_row_scale_in(result, i, normalize);
-		
+
 		// for each row, eliminate elements under the pivot
 		for (int j = 0; j < mat_copy.m; j++) {
 			if(i == j) { continue; }								// don't eliminate the pivot
@@ -837,7 +675,7 @@ fmatrix fmatrix_col_space(fmatrix mat, pool* frame) {
 
 		// if a marked free column exists for swapping, swap with the located pivot
 		if(swap_col == -1) { continue; }
-		
+
 		fmatrix_col_swap_in(mat_cpy, swap_col, i);		// swap the column
 		swap_col++;										// increment which column to swap.
 	}

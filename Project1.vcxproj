@@ -21,15 +21,17 @@
   <ItemGroup>
     <ClCompile Include="graphics_tools.c" />
     <ClCompile Include="main.c" />
-    <ClCompile Include="matrix.c" />
-    <ClCompile Include="memoryPool.c" />
+    <ClCompile Include="matrix_create.c" />
+    <ClCompile Include="matrix_ops.c" />
+    <ClCompile Include="matrix_util.c" />
+    <ClCompile Include="memory_pool.c" />
     <ClCompile Include="testing.c" />
     <ClCompile Include="vector.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="graphics_tools.h" />
     <ClInclude Include="matrix.h" />
-    <ClInclude Include="memoryPool.h" />
+    <ClInclude Include="memory_pool.h" />
     <ClInclude Include="testing.h" />
     <ClInclude Include="vector.h" />
   </ItemGroup>
