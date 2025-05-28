@@ -29,7 +29,6 @@
     <ClCompile Include="vector.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="graphics_tools.h" />
     <ClInclude Include="matrix.h" />
     <ClInclude Include="memory_pool.h" />
     <ClInclude Include="testing.h" />

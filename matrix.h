@@ -125,4 +125,19 @@ fmatrix fmatrix_row_space(fmatrix mat, pool* frame);
 fmatrix* fmatrix_LU_factorize(fmatrix mat, fmatrix result[3], pool* frame);
 fmatrix fmatrix_LU_solve(fmatrix A, fmatrix b, pool* frame);
 
+// graphics stuff
+
+#define PERSP_PROJ_DIMENSION 4
+// I have a lot of macro plans for here due to the sheet variance across different graphics APIs and the 
+// way they handle different matrices (ex perspective projection)
+// openGL uses left hand rule and a different canonical view volume to Vulkan, which uses right hand rule.
+// for now, implement for vulkan, but use macros for more flexibility
+
+fmatrix ortho_proj_plane  (float l, float r, float b, float t, float n, float f, pool* frame);
+fmatrix ortho_proj_plane_c(float r,			 float b,		   float n, float f, pool* frame);
+
+fmatrix persp_proj_plane  (float l, float r, float b, float t, float n, float f, pool* frame);
+fmatrix persp_proj_plane_c(float r,			 float b,		   float n, float f, pool* frame);
+fmatrix persp_proj_fov	  (float w, float h, float theta,	   float n, float f, pool* frame);
+
 #endif MATRIX_H

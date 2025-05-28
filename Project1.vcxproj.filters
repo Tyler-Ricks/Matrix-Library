@@ -53,8 +53,5 @@
     <ClInclude Include="testing.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="graphics_tools.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>
