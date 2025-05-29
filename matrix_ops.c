@@ -23,6 +23,8 @@
 //				- specific matrices (perspective, scale/rotate/translate, lookAt, etc)
 //				- quaternions?
 //				- 
+//		  6) SIMD sidequest- start with 4x4 addition, then move to any length addition,
+//			 then multiplication?
 //
 
 
@@ -95,6 +97,36 @@ fmatrix fmatrix_add(fmatrix matA, fmatrix matB, pool *frame) {
 		for(int j = 0; j < matA.n; j++){
 			result.matrix[INDEX_AT(result, i, j)] = MATRIX_AT(matA, i, j) + MATRIX_AT(matB, i, j);
 		}
+	}
+
+	return result;
+}
+
+
+// adds two 4x4 matrices, returns a new matrix with the result. 
+// DOES NOT WORK WITH LAZY TRANSPOSES FOR NOW: simd loading works with contiguous memory, so passing 
+// a lazy transpose as a parameter will result in adding rows with columns (or vise versa)
+// This will work if both matrices are lazy transposed though
+fmatrix simd_44_add(fmatrix A, fmatrix B, pool* frame) {
+	if (A.m != 4 || A.n != 4) {
+		printf("Error in simd44_add: must pass a 4x4 matrix into 1st parameter\n");
+		return	ERROR_FMATRIX;
+	}
+	if (B.m != 4 || B.n != 4) {
+		printf("Error in simd44_add: must pass a 4x4 matrix into 2nd parameter\n");
+		return	ERROR_FMATRIX;
+	}
+
+	float C[16];
+	fmatrix result = create_fmatrix(4, 4, C, frame);
+	if(!result.matrix){ return result; } // fmatrix allocation failed
+
+	// iterate through columns of A and B
+	for (int i = 0; i < 16; i += 4) {
+		__m128 a = _mm_loadu_ps(&A.matrix[i]);	// load a column from A into the register
+		__m128 b = _mm_loadu_ps(&B.matrix[i]);	// load a column from B into another register
+		__m128 c = _mm_add_ps(a, b);			// add the contents of the two registers, storing the result in register c
+		_mm_storeu_ps(&result.matrix[i], c);	// store the contents of c into thecurrent column location of C
 	}
 
 	return result;

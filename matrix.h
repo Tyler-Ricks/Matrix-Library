@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdint.h>
+#include <xmmintrin.h> // for SSE SIMD stuff
 
 #include "memory_pool.h"
 
@@ -31,30 +32,6 @@
 
 // error matrix
 # define ERROR_FMATRIX (fmatrix){ 0, 0, NULL, 0 }
- /*
-// I have a really strange idea that I want to work with later.
-// I'll use the transpose operation as an example. normally, it takes O(mn), because we
-// either copy the contents of the matrix in to another one, or rearrange elements from 
-// the input matrix.
-// However, I have an idea that could also make implementing column operations not as
-// tedious.
-// transpose could be done in constant time, by having a flag indicating a transpose in
-// the struct. transpose in real life basically turns the matrix's rows into
-// columns and columns into rows. In other words, we change how to read from the matrix
-// from row major order into column major order. 
-// This is how I want to make this work in constant time. All it would take to transpose
-// a matrix is to change the method we use to read the matrix. (It would still take O(mn)
-// time for not in-place algorithms so the matrix contents get copied into the new matrix)
-
-// This also can generalize row operations and column operations into the same operation.
-// A column operation can be done by just transposing a matrix, doing a row operation, 
-// then transposing it back. transpose now takes constant time, so column operation 
-// functions can be ridiculously simple.
-// Of course, implementing it as a direct column operation is a little faster, but I 
-// still like this trick
-
-// To indicate that a matrix should be read in column major order, I'll include a flag in 
-// the fmatrix struct. */
 
 // float matrix
 typedef struct{
@@ -86,6 +63,7 @@ void intswap(int *a, int *b);
 
 fmatrix fmatrix_add_in(fmatrix matA, fmatrix matB);
 fmatrix fmatrix_add(fmatrix matA, fmatrix matB, pool *frame);
+fmatrix simd_44_add(fmatrix A, fmatrix B, pool* frame);
 fmatrix fmatrix_subtract_in(fmatrix matA, fmatrix matB);
 fmatrix fmatrix_subtract(fmatrix matA, fmatrix matB, pool *frame);
 fmatrix fmatrix_scale_in(fmatrix mat, float c);

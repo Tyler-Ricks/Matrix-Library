@@ -750,7 +750,7 @@ void run_LU_solve(int r, int c, float* A, float* b) {
 	free_pool(&frame);
 }
 
-test_LU_solve() {
+void test_LU_solve() {
 	// test a basic matrix and vector
 	{
 		printf("testing normal matrix:\n");
@@ -778,8 +778,46 @@ test_LU_solve() {
 	}
 }
 
+void run_simd_44_add(float* mat1, float* mat2){
+	int count44 = 3; // 1 for A, 1 for B, 1 for result
+	pool frame = create_pool((count44 * 4 * 4) * sizeof(float));
+
+	if (frame.start == NULL) {
+		exit(1);
+	}
+
+	printf("\nA: \n");
+	fmatrix A = create_fmatrix(4, 4, mat1, & frame);
+	print_fmatrix(A);
+
+	printf("\nB: \n");
+	fmatrix B = create_fmatrix(4, 4, mat2, &frame);
+	print_fmatrix(B);
+
+	printf("\nA + B:\n");
+	fmatrix C = simd_44_add(A, B, &frame);
+	print_fmatrix(C);
+
+	free_pool(&frame);
+}
+
+void test_simd_44_add() {
+	// test basic matrices
+	{
+		float A[16] = { 1.0f,	2.0f,	3.0f,	4.0f,
+						5.0f,	6.0f,	7.0f,	8.0f, 
+						9.0f,	10.0f,	11.0f,	12.0f,
+						13.0f,	14.0f,	15.0f,	16.0f};
+		float B[16] = { 1.0f,	1.0f,	1.0f,	1.0f,
+						1.0f,	1.0f,	1.0f,	1.0f,
+						1.0f,	1.0f,	1.0f,	1.0f,
+						1.0f,	1.0f,	1.0f,	1.0f};
+		run_simd_44_add(A, B);
+	}
+}
+
 int main() {
-	switch(15){
+	switch(16){
 	case 1:
 		test_transpose();
 		break;
@@ -824,6 +862,9 @@ int main() {
 		break;
 	case 15:
 		test_LU_solve();
+		break;
+	case 16:
+		test_simd_44_add();
 		break;
 	default:
 		printf("no tests\n");

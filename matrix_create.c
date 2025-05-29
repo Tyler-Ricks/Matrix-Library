@@ -2,7 +2,11 @@
 
 
 // This file includes functions for creating or copying an fmatrix.
-// It handles all management after a memory pool is created
+// It handles memory management for creating fmatrices on a memory pool after a memory pool is created
+
+// memory_pool is a bump allocator, so you typically free all the memory at once with free_pool
+// alternatively, you can free the most recently allocated fmatrix if you still have a pointer to it
+// with pool_free_from
 
 // allocates m by n blocks of memory of a given size in a pool, returns a struct with a pointer to it,
 // the dimensions of the matrix, and if it is a transpose or not.
