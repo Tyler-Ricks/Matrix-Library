@@ -778,7 +778,7 @@ void test_LU_solve() {
 	}
 }
 
-void run_simd_44_add(float* mat1, float* mat2){
+void run_simd_add(float* mat1, float* mat2){
 	int count44 = 3; // 1 for A, 1 for B, 1 for result
 	pool frame = create_pool((count44 * 4 * 4) * sizeof(float));
 
@@ -800,13 +800,13 @@ void run_simd_44_add(float* mat1, float* mat2){
 	print_fmatrix(B);
 
 	printf("\nA + B:\n");
-	fmatrix C = simd_44_add(A, B, &frame);
+	fmatrix C = fmatrix_simd_add(A, B, &frame);
 	print_fmatrix(C);
 
 	free_pool(&frame);
 }
 
-void test_simd_44_add() {
+void test_simd_add() {
 	// test basic matrices
 	{
 		float A[16] = { 1.0f,	2.0f,	3.0f,	4.0f,
@@ -817,7 +817,7 @@ void test_simd_44_add() {
 						2.0f,	2.0f,	2.0f,	2.0f,
 						3.0f,	3.0f,	3.0f,	3.0f,
 						4.0f,	4.0f,	4.0f,	4.0f};
-		run_simd_44_add(A, B);
+		run_simd_add(A, B);
 	}
 }
 
@@ -869,7 +869,7 @@ int main() {
 		test_LU_solve();
 		break;
 	case 16:
-		test_simd_44_add();
+		test_simd_add();
 		break;
 	default:
 		printf("no tests\n");

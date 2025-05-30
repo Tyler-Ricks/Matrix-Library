@@ -33,6 +33,27 @@ fmatrix create_fmatrix(int m, int n, float* matrix, pool* frame) {
 	return (fmatrix) {m, n, matrix, 0};
 }
 
+// creates and returns an fmatrix, with no matrix data filled in
+// returns ERROR_FMATRIX on failure
+fmatrix fmatrix_create_raw(int m, int n, pool* frame) {
+	if (m < 0 || n < 0) {
+		printf("fmatrix must have positive row/columns\n");
+		return ERROR_FMATRIX;
+	}
+	if (!frame || !frame->start) {
+		printf("failed to create matrix (faulty input frame). Returning empty matrix\n");
+		return ERROR_FMATRIX;
+	}
+
+	float* matrix = raw_pool_alloc(frame, m * n * sizeof(float));
+	if (matrix == NULL) {
+		printf("pool allocation for identity matrix failed, returning error matrix");
+		return ERROR_FMATRIX;
+	}
+
+	return (fmatrix) {m, n, matrix, 0};
+}
+
 // returns an identity matrix of size m x n, allocated on frame
 // returns ERROR_FMATRIX upon failure
 fmatrix fmatrix_create_identity(int m, int n, pool* frame) {

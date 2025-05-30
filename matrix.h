@@ -17,7 +17,8 @@
 	#define MATRIX_AT(mat, i, j) ((mat.transpose) ? (mat.matrix[(i) * mat.n + (j)]) : (mat.matrix[(j) * mat.m + (i)]))
 	#define INDEX_AT(mat, i, j) ((mat.transpose) ? ((i) * mat.n + (j)) : ((j) * mat.m + (i)))
 	#define MAJOR(mat) (mat.n) // columns stored contiguously
-	#define MINOR(mat) (mat.m) // rows stored in stride
+	#define MINOR(mat) (mat.m) // rows stored in 
+	#define ARRAY_INDEX(mat, i) ((mat.transpose) ? (((i) / mat.n) + (mat.n * ((i) % mat.n))): (i))
 #else
 	#define MATRIX_AT(mat, i, j) ((mat.transpose) ? (mat.matrix[(j) * mat.m + (i)]) : (mat.matrix[(i) * mat.n + (j)]))
 	#define INDEX_AT(mat, i, j) ((mat.transpose) ? ((j) * mat.m + (i)) : ((i) * mat.n + (j)))
@@ -46,6 +47,7 @@ typedef struct{
 }fmatrix;
 
 fmatrix create_fmatrix(int m, int n, float* matrix, pool *frame);
+fmatrix fmatrix_create_raw(int m, int n, pool* frame);
 fmatrix fmatrix_create_identity(int m, int n, pool* frame);
 fmatrix fmatrix_create_full(int m, int n, float x, pool* frame);
 
@@ -64,6 +66,7 @@ void intswap(int *a, int *b);
 fmatrix fmatrix_add_in(fmatrix matA, fmatrix matB);
 fmatrix fmatrix_add(fmatrix matA, fmatrix matB, pool *frame);
 fmatrix simd_44_add(fmatrix A, fmatrix B, pool* frame);
+fmatrix fmatrix_simd_add(fmatrix A, fmatrix B, pool* frame);
 fmatrix fmatrix_subtract_in(fmatrix matA, fmatrix matB);
 fmatrix fmatrix_subtract(fmatrix matA, fmatrix matB, pool *frame);
 fmatrix fmatrix_scale_in(fmatrix mat, float c);
