@@ -790,8 +790,13 @@ void run_simd_44_add(float* mat1, float* mat2){
 	fmatrix A = create_fmatrix(4, 4, mat1, & frame);
 	print_fmatrix(A);
 
-	printf("\nB: \n");
+	/*printf("\nB: \n");
 	fmatrix B = create_fmatrix(4, 4, mat2, &frame);
+	print_fmatrix(B);*/
+
+	printf("\nB^t: \n");
+	fmatrix B = create_fmatrix(4, 4, mat2, &frame);
+	fmatrix_transpose_in(&B);
 	print_fmatrix(B);
 
 	printf("\nA + B:\n");
@@ -809,9 +814,9 @@ void test_simd_44_add() {
 						9.0f,	10.0f,	11.0f,	12.0f,
 						13.0f,	14.0f,	15.0f,	16.0f};
 		float B[16] = { 1.0f,	1.0f,	1.0f,	1.0f,
-						1.0f,	1.0f,	1.0f,	1.0f,
-						1.0f,	1.0f,	1.0f,	1.0f,
-						1.0f,	1.0f,	1.0f,	1.0f};
+						2.0f,	2.0f,	2.0f,	2.0f,
+						3.0f,	3.0f,	3.0f,	3.0f,
+						4.0f,	4.0f,	4.0f,	4.0f};
 		run_simd_44_add(A, B);
 	}
 }

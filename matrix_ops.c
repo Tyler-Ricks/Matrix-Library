@@ -102,11 +102,11 @@ fmatrix fmatrix_add(fmatrix matA, fmatrix matB, pool *frame) {
 	return result;
 }
 
-
 // adds two 4x4 matrices, returns a new matrix with the result. 
-// DOES NOT WORK WITH LAZY TRANSPOSES FOR NOW: simd loading works with contiguous memory, so passing 
-// a lazy transpose as a parameter will result in adding rows with columns (or vise versa)
-// This will work if both matrices are lazy transposed though
+// if in CMO, adds all 4 elements of a given column at once with SSE SIMD
+// stores the result column in the new matrix
+// if in RMO, it adds by row instead, as rows are stored contiguously instead of columns
+#ifdef CMO
 fmatrix simd_44_add(fmatrix A, fmatrix B, pool* frame) {
 	if (A.m != 4 || A.n != 4) {
 		printf("Error in simd44_add: must pass a 4x4 matrix into 1st parameter\n");
@@ -121,16 +121,62 @@ fmatrix simd_44_add(fmatrix A, fmatrix B, pool* frame) {
 	fmatrix result = create_fmatrix(4, 4, C, frame);
 	if(!result.matrix){ return result; } // fmatrix allocation failed
 
-	// iterate through columns of A and B
-	for (int i = 0; i < 16; i += 4) {
-		__m128 a = _mm_loadu_ps(&A.matrix[i]);	// load a column from A into the register
-		__m128 b = _mm_loadu_ps(&B.matrix[i]);	// load a column from B into another register
-		__m128 c = _mm_add_ps(a, b);			// add the contents of the two registers, storing the result in register c
-		_mm_storeu_ps(&result.matrix[i], c);	// store the contents of c into thecurrent column location of C
+	// iterate through columns of A and B, accounting for stride
+	for (int i = 0; i < 4; i++ ) {
+		__m128 colA = _mm_set_ps(	MATRIX_AT(A, 3, i),
+									MATRIX_AT(A, 2, i),
+									MATRIX_AT(A, 1, i),
+									MATRIX_AT(A, 0, i));
+		//printf("colA: %f, %f, %f, %f\n", MATRIX_AT(A, 3, i), MATRIX_AT(A, 2, i), MATRIX_AT(A, 1, i), MATRIX_AT(A, 0, i));
+
+		__m128 colB = _mm_set_ps(	MATRIX_AT(B, 3, i),
+									MATRIX_AT(B, 2, i),
+									MATRIX_AT(B, 1, i),
+									MATRIX_AT(B, 0, i));
+		//printf("colB: %f, %f, %f, %f\n\n", MATRIX_AT(B, 3, i), MATRIX_AT(B, 2, i), MATRIX_AT(B, 1, i), MATRIX_AT(B, 0, i));
+		__m128 colC = _mm_add_ps(colA, colB);
+		_mm_storeu_ps(&result.matrix[i * 4], colC);	// store the contents of c into thecurrent column location of C
 	}
 
 	return result;
 }
+
+#else
+fmatrix simd_44_add(fmatrix A, fmatrix B, pool* frame) {
+	if (A.m != 4 || A.n != 4) {
+		printf("Error in simd44_add: must pass a 4x4 matrix into 1st parameter\n");
+		return	ERROR_FMATRIX;
+	}
+	if (B.m != 4 || B.n != 4) {
+		printf("Error in simd44_add: must pass a 4x4 matrix into 2nd parameter\n");
+		return	ERROR_FMATRIX;
+	}
+
+	float C[16];
+	fmatrix result = create_fmatrix(4, 4, C, frame);
+	if(!result.matrix){ return result; } // fmatrix allocation failed
+
+	// iterate through columns of A and B, accounting for stride
+	for (int i = 0; i < 4; i++ ) {
+		__m128 colA = _mm_set_ps(	MATRIX_AT(A, i, 3),
+									MATRIX_AT(A, i, 2),
+									MATRIX_AT(A, i, 1),
+									MATRIX_AT(A, i, 0));
+		//printf("colA: %f, %f, %f, %f\n", MATRIX_AT(A, 3, i), MATRIX_AT(A, 2, i), MATRIX_AT(A, 1, i), MATRIX_AT(A, 0, i));
+
+		__m128 colB = _mm_set_ps(	MATRIX_AT(B, i, 3),
+									MATRIX_AT(B, i, 2),
+									MATRIX_AT(B, i, 1),
+									MATRIX_AT(B, i, 0));
+		//printf("colB: %f, %f, %f, %f\n\n", MATRIX_AT(B, 3, i), MATRIX_AT(B, 2, i), MATRIX_AT(B, 1, i), MATRIX_AT(B, 0, i));
+		__m128 colC = _mm_add_ps(colA, colB);
+		_mm_storeu_ps(&result.matrix[i * 4], colC);	// store the contents of c into thecurrent column location of C
+	}
+
+	return result;
+}
+
+#endif 
 
 // subtracts values of matB from values of matA, given that they have the same dimensions
 // 
