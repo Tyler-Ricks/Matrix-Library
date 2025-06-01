@@ -141,41 +141,6 @@ fmatrix simd_44_add(fmatrix A, fmatrix B, pool* frame) {
 	return result;
 }
 
-fmatrix fmatrix_simd_add(fmatrix A, fmatrix B, pool* frame) {
-	if (A.m != B.m || A.n != B.n) {
-		printf("Error in simd_add: dimension mismatch for input matrices\n");
-		return ERROR_FMATRIX;
-	}
-
-	fmatrix result = fmatrix_create_raw(A.m, A.n, frame);
-	if(!result.matrix){ return result; }
-
-	int size = A.m * A.n;
-	int bound = size - (size % 4);
-	int i = 0;
-	for (i; i < bound; i += 4) {
-		__m128 colA = _mm_set_ps(	A.matrix[ARRAY_INDEX(A, i + 3)],
-									A.matrix[ARRAY_INDEX(A, i + 2)],
-									A.matrix[ARRAY_INDEX(A, i + 1)],
-									A.matrix[ARRAY_INDEX(A, i)]);
-		//printf("colA: %f, %f, %f, %f\n", A.matrix[ARRAY_INDEX(A, i)], A.matrix[ARRAY_INDEX(A, i + 1)], A.matrix[ARRAY_INDEX(A, i + 2)], A.matrix[ARRAY_INDEX(A, i + 3)]);
-
-		__m128 colB = _mm_set_ps(	B.matrix[ARRAY_INDEX(B, i + 3)],
-									B.matrix[ARRAY_INDEX(B, i + 2)],
-									B.matrix[ARRAY_INDEX(B, i + 1)],
-									B.matrix[ARRAY_INDEX(B, i)]);
-		//printf("colB: %f, %f, %f, %f\n\n", B.matrix[ARRAY_INDEX(B, i)], B.matrix[ARRAY_INDEX(B, i + 1)], B.matrix[ARRAY_INDEX(B, i + 2)], B.matrix[ARRAY_INDEX(B, i + 3)]);
-		//printf("next\n");
-		__m128 colC = _mm_add_ps(colA, colB);
-		_mm_storeu_ps(&result.matrix[i], colC);	// store the contents of c into the current column location of C
-	}
-	
-	for (i; i < size; i++) {
-		result.matrix[i] = A.matrix[ARRAY_INDEX(A, i)] + B.matrix[ARRAY_INDEX(B, i)];
-	}
-
-	return result;
-}
 
 #else
 fmatrix simd_44_add(fmatrix A, fmatrix B, pool* frame) {
@@ -213,6 +178,43 @@ fmatrix simd_44_add(fmatrix A, fmatrix B, pool* frame) {
 }
 
 #endif 
+
+fmatrix fmatrix_simd_add(fmatrix A, fmatrix B, pool* frame) {
+	if (A.m != B.m || A.n != B.n) {
+		printf("Error in simd_add: dimension mismatch for input matrices\n");
+		return ERROR_FMATRIX;
+	}
+
+	fmatrix result = fmatrix_create_raw(A.m, A.n, frame);
+	if(!result.matrix){ return result; }
+
+	int size = A.m * A.n;
+	int bound = size - (size % 4);
+	int i = 0;
+	for (i; i < bound; i += 4) {
+		__m128 colA = _mm_set_ps(	A.matrix[ARRAY_INDEX(A, i + 3)],
+			A.matrix[ARRAY_INDEX(A, i + 2)],
+			A.matrix[ARRAY_INDEX(A, i + 1)],
+			A.matrix[ARRAY_INDEX(A, i)]);
+		//printf("colA: %f, %f, %f, %f\n", A.matrix[ARRAY_INDEX(A, i)], A.matrix[ARRAY_INDEX(A, i + 1)], A.matrix[ARRAY_INDEX(A, i + 2)], A.matrix[ARRAY_INDEX(A, i + 3)]);
+
+		__m128 colB = _mm_set_ps(	B.matrix[ARRAY_INDEX(B, i + 3)],
+			B.matrix[ARRAY_INDEX(B, i + 2)],
+			B.matrix[ARRAY_INDEX(B, i + 1)],
+			B.matrix[ARRAY_INDEX(B, i)]);
+		//printf("colB: %f, %f, %f, %f\n\n", B.matrix[ARRAY_INDEX(B, i)], B.matrix[ARRAY_INDEX(B, i + 1)], B.matrix[ARRAY_INDEX(B, i + 2)], B.matrix[ARRAY_INDEX(B, i + 3)]);
+		//printf("next\n");
+		__m128 colC = _mm_add_ps(colA, colB);
+		_mm_storeu_ps(&result.matrix[i], colC);	// store the contents of c into the current column location of C
+	}
+
+	// add any elements that don't fit into SIMD slots (up to 3)
+	for (i; i < size; i++) {
+		result.matrix[i] = A.matrix[ARRAY_INDEX(A, i)] + B.matrix[ARRAY_INDEX(B, i)];
+	}
+
+	return result;
+}
 
 // subtracts values of matB from values of matA, given that they have the same dimensions
 // 
