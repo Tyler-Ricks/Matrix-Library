@@ -24,6 +24,7 @@
 	#define INDEX_AT(mat, i, j) ((mat.transpose) ? ((j) * mat.m + (i)) : ((i) * mat.n + (j)))
 	#define MAJOR(mat) (mat.m) // rows store contiguously
 	#define MINOR(mat) (mat.n) // columns stored in stride
+	#define ARRAY_INDEX(mat, i) ((mat.transpose) ? (((i) / mat.n) + (mat.m * ((i) % mat.n))): (i))
 #endif 
 
 
