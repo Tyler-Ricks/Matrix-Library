@@ -779,24 +779,26 @@ void test_LU_solve() {
 }
 
 void run_simd_add(float* mat1, float* mat2){
-	int count44 = 3; // 1 for A, 1 for B, 1 for result
-	pool frame = create_pool((count44 * 4 * 4) * sizeof(float));
+	int count43 = 3; // 1 for A, 1 for B, 1 for result
+	pool frame = create_pool((count43 * 2 * 3) * sizeof(float));
 
 	if (frame.start == NULL) {
 		exit(1);
 	}
 
 	printf("\nA: \n");
-	fmatrix A = create_fmatrix(4, 4, mat1, & frame);
+	fmatrix A = create_fmatrix(2, 3, mat1, & frame);
 	print_fmatrix(A);
 
 	/*printf("\nB: \n");
-	fmatrix B = create_fmatrix(4, 4, mat2, &frame);
+	fmatrix B = create_fmatrix(2, 3, mat2, &frame);
 	print_fmatrix(B);*/
 
-	printf("\nB^t: \n");
-	fmatrix B = create_fmatrix(4, 4, mat2, &frame);
+	printf("\nB: \n");
+	fmatrix B = create_fmatrix(3, 2, mat2, &frame);
+	print_fmatrix(B);
 	fmatrix_transpose_in(&B);
+	printf("\nB^t:\n");
 	print_fmatrix(B);
 
 	printf("\nA + B:\n");
@@ -809,14 +811,11 @@ void run_simd_add(float* mat1, float* mat2){
 void test_simd_add() {
 	// test basic matrices
 	{
-		float A[16] = { 1.0f,	2.0f,	3.0f,	4.0f,
-						5.0f,	6.0f,	7.0f,	8.0f, 
-						9.0f,	10.0f,	11.0f,	12.0f,
-						13.0f,	14.0f,	15.0f,	16.0f};
-		float B[16] = { 1.0f,	1.0f,	1.0f,	1.0f,
-						2.0f,	2.0f,	2.0f,	2.0f,
-						3.0f,	3.0f,	3.0f,	3.0f,
-						4.0f,	4.0f,	4.0f,	4.0f};
+		float A[12] = { 1.0f,	2.0f,
+						5.0f,	6.0f, 
+						9.0f,	10.0f};
+		float B[12] = { 1.0f,	1.0f,	1.0f,
+			2.0f,	2.0f,	2.0f};
 		run_simd_add(A, B);
 	}
 }

@@ -152,7 +152,8 @@ fmatrix fmatrix_simd_add(fmatrix A, fmatrix B, pool* frame) {
 
 	int size = A.m * A.n;
 	int bound = size - (size % 4);
-	for (int i = 0; i < bound; i += 4) {
+	int i = 0;
+	for (i; i < bound; i += 4) {
 		__m128 colA = _mm_set_ps(	A.matrix[ARRAY_INDEX(A, i + 3)],
 									A.matrix[ARRAY_INDEX(A, i + 2)],
 									A.matrix[ARRAY_INDEX(A, i + 1)],
@@ -163,10 +164,15 @@ fmatrix fmatrix_simd_add(fmatrix A, fmatrix B, pool* frame) {
 									B.matrix[ARRAY_INDEX(B, i + 2)],
 									B.matrix[ARRAY_INDEX(B, i + 1)],
 									B.matrix[ARRAY_INDEX(B, i)]);
+		printf("colB: %d, %d, %d, %d", ARRAY_INDEX(B, i), ARRAY_INDEX(B, i + 1), ARRAY_INDEX(B, i + 2), ARRAY_INDEX(B, i + 3));
 		printf("colB: %f, %f, %f, %f\n\n", B.matrix[ARRAY_INDEX(B, i)], B.matrix[ARRAY_INDEX(B, i + 1)], B.matrix[ARRAY_INDEX(B, i + 2)], B.matrix[ARRAY_INDEX(B, i + 3)]);
 		printf("next\n");
 		__m128 colC = _mm_add_ps(colA, colB);
 		_mm_storeu_ps(&result.matrix[i], colC);	// store the contents of c into the current column location of C
+	}
+	
+	for (i; i < size; i++) {
+		result.matrix[i] = A.matrix[ARRAY_INDEX(A, i)] + B.matrix[ARRAY_INDEX(B, i)];
 	}
 
 	return result;

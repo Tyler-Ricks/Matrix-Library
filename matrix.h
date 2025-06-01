@@ -18,7 +18,7 @@
 	#define INDEX_AT(mat, i, j) ((mat.transpose) ? ((i) * mat.n + (j)) : ((j) * mat.m + (i)))
 	#define MAJOR(mat) (mat.n) // columns stored contiguously
 	#define MINOR(mat) (mat.m) // rows stored in 
-	#define ARRAY_INDEX(mat, i) ((mat.transpose) ? (((i) / mat.n) + (mat.n * ((i) % mat.n))): (i))
+	#define ARRAY_INDEX(mat, i) ((mat.transpose) ? (((i) / mat.m) + (mat.n * ((i) % mat.m))): (i))
 #else
 	#define MATRIX_AT(mat, i, j) ((mat.transpose) ? (mat.matrix[(j) * mat.m + (i)]) : (mat.matrix[(i) * mat.n + (j)]))
 	#define INDEX_AT(mat, i, j) ((mat.transpose) ? ((j) * mat.m + (i)) : ((i) * mat.n + (j)))
@@ -43,6 +43,7 @@ typedef struct{
 	// flag for transpose handling
 	uint8_t transpose;
 	// padding for cache
+	// I could potentially add more flags here? maybe a 4 byte identifier for different kinds of matrices?
 	uint8_t padding[3];
 }fmatrix;
 
