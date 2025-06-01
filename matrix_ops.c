@@ -21,10 +21,11 @@
 //				- Vulkan works with column major order???? Lots of refactoring needed
 //				- implement vector specific operations (dot product, cross product, normalization)
 //				- specific matrices (perspective, scale/rotate/translate, lookAt, etc)
-//				- quaternions?
+//				- quaternions? rotors? algebraic geometry?
 //				- 
 //		  6) SIMD sidequest- start with 4x4 addition, then move to any length addition,
 //			 then multiplication?
+//			 - Each column/row operation can also be sped up with this wow
 //
 
 
@@ -100,6 +101,20 @@ fmatrix fmatrix_add(fmatrix matA, fmatrix matB, pool *frame) {
 	}
 
 	return result;
+}
+
+// loads 4 contiguous floats in A's matrix, starting from i
+// DOES NOT CHECK IF THIS WOULD STEP OUT OF MATRIX BOUNDS
+// returns 
+__m128 simd_load_cont(fmatrix A, int i) {
+	return _mm_loadu_ps(&A.matrix[i]);
+}
+
+__m128 simd_load_transpose(fmatrix A, int i) {
+	return _mm_set_ps(	A.matrix[ARRAY_INDEX(A, i + 3)],
+						A.matrix[ARRAY_INDEX(A, i + 2)],
+						A.matrix[ARRAY_INDEX(A, i + 1)],
+						A.matrix[ARRAY_INDEX(A, i)]);
 }
 
 // adds two 4x4 matrices, returns a new matrix with the result. 
@@ -188,20 +203,30 @@ fmatrix fmatrix_simd_add(fmatrix A, fmatrix B, pool* frame) {
 	fmatrix result = fmatrix_create_raw(A.m, A.n, frame);
 	if(!result.matrix){ return result; }
 
+	// determine if we can load matrix memory contiguously into simd registers (contiguous loading takes less instructions)
+	__m128 (*load_A)(fmatrix, int);
+	__m128 (*load_B)(fmatrix, int);
+	if (A.transpose == B.transpose) { // linear memory access lines up for both matrices
+		load_A = &simd_load_cont;
+		load_B = &simd_load_cont;
+	}
+	else if (A.transpose == 1) {	
+		load_A = &simd_load_transpose;
+		load_B = &simd_load_cont;
+	}
+	else {
+		load_A = &simd_load_cont;
+		load_B = &simd_load_transpose;
+	}
+
 	int size = A.m * A.n;
 	int bound = size - (size % 4);
 	int i = 0;
 	for (i; i < bound; i += 4) {
-		__m128 colA = _mm_set_ps(	A.matrix[ARRAY_INDEX(A, i + 3)],
-			A.matrix[ARRAY_INDEX(A, i + 2)],
-			A.matrix[ARRAY_INDEX(A, i + 1)],
-			A.matrix[ARRAY_INDEX(A, i)]);
+		__m128 colA = load_A(A, i);
 		//printf("colA: %f, %f, %f, %f\n", A.matrix[ARRAY_INDEX(A, i)], A.matrix[ARRAY_INDEX(A, i + 1)], A.matrix[ARRAY_INDEX(A, i + 2)], A.matrix[ARRAY_INDEX(A, i + 3)]);
 
-		__m128 colB = _mm_set_ps(	B.matrix[ARRAY_INDEX(B, i + 3)],
-			B.matrix[ARRAY_INDEX(B, i + 2)],
-			B.matrix[ARRAY_INDEX(B, i + 1)],
-			B.matrix[ARRAY_INDEX(B, i)]);
+		__m128 colB = load_B(B, i);
 		//printf("colB: %f, %f, %f, %f\n\n", B.matrix[ARRAY_INDEX(B, i)], B.matrix[ARRAY_INDEX(B, i + 1)], B.matrix[ARRAY_INDEX(B, i + 2)], B.matrix[ARRAY_INDEX(B, i + 3)]);
 		//printf("next\n");
 		__m128 colC = _mm_add_ps(colA, colB);
@@ -254,6 +279,55 @@ fmatrix fmatrix_subtract(fmatrix matA, fmatrix matB, pool *frame) {
 		for(int j = 0; j < matA.n; j++){
 			result.matrix[INDEX_AT(result, i, j)] = MATRIX_AT(matA, i, j) - MATRIX_AT(matB, i, j);
 		}
+	}
+
+	return result;
+}
+
+// same thing as fmatrix_simd_add, but does subtraction instead of addition.
+fmatrix fmatrix_simd_add(fmatrix A, fmatrix B, pool* frame) {
+	if (A.m != B.m || A.n != B.n) {
+		printf("Error in simd_add: dimension mismatch for input matrices\n");
+		return ERROR_FMATRIX;
+	}
+
+	fmatrix result = fmatrix_create_raw(A.m, A.n, frame);
+	if(!result.matrix){ return result; }
+
+	// determine if we can load matrix memory contiguously into simd registers
+	// if both matrices are lazy transpose, then contiguous access of each maps properly
+	__m128 (*load_A)(fmatrix, int);
+	__m128 (*load_B)(fmatrix, int);
+	if (A.transpose == B.transpose) {
+		load_A = &simd_load_cont;
+		load_B = &simd_load_cont;
+	}
+	else if (A.transpose == 1) {	
+		load_A = &simd_load_transpose;
+		load_B = &simd_load_cont;
+	}
+	else {
+		load_A = &simd_load_cont;
+		load_B = &simd_load_transpose;
+	}
+
+	int size = A.m * A.n;
+	int bound = size - (size % 4);
+	int i = 0;
+	for (i; i < bound; i += 4) {
+		__m128 colA = load_A(A, i);
+		//printf("colA: %f, %f, %f, %f\n", A.matrix[ARRAY_INDEX(A, i)], A.matrix[ARRAY_INDEX(A, i + 1)], A.matrix[ARRAY_INDEX(A, i + 2)], A.matrix[ARRAY_INDEX(A, i + 3)]);
+
+		__m128 colB = load_B(B, i);
+		//printf("colB: %f, %f, %f, %f\n\n", B.matrix[ARRAY_INDEX(B, i)], B.matrix[ARRAY_INDEX(B, i + 1)], B.matrix[ARRAY_INDEX(B, i + 2)], B.matrix[ARRAY_INDEX(B, i + 3)]);
+		//printf("next\n");
+		__m128 colC = _mm_sub_ps(colA, colB);
+		_mm_storeu_ps(&result.matrix[i], colC);	// store the contents of c into the current column location of C
+	}
+
+	// add any elements that don't fit into SIMD slots (up to 3)
+	for (i; i < size; i++) {
+		result.matrix[i] = A.matrix[ARRAY_INDEX(A, i)] - B.matrix[ARRAY_INDEX(B, i)];
 	}
 
 	return result;
