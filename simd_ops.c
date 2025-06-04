@@ -201,7 +201,7 @@ fmatrix fmatrix_simd_subtract(fmatrix A, fmatrix B, pool* frame) {
 	return result;
 }
 
-// multiplies two matrices using simd, returns the result
+// multiplies AxB using simd, returns the result
 // returns ERROR_FMATRIX upon invalid multiplication
 fmatrix fmatrix_simd_multiply(fmatrix A, fmatrix B, pool* frame) {
 	if (A.n != B.m) {
@@ -216,15 +216,22 @@ fmatrix fmatrix_simd_multiply(fmatrix A, fmatrix B, pool* frame) {
 	// rows and columns that fit into simd registers
 	//int rows = AB.m - (AB.m % FLOAT_CAPACITY);
 	//int cols = AB.n - (AB.n % FLOAT_CAPACITY);
-	int dim = A.n - (A.n % FLOAT_CAPACITY); // number of elements that 
+	int dim = A.n - A.n % FLOAT_CAPACITY; 
 
 	for (int i = 0; i < AB.m; i++) {
 		for (int j = 0; j < AB.n; j++) {
-			for (int k = 0; k < dim; k += 4) {
+			int k = 0;
+			float result = 0.0f;
+			for (k; k < dim; k += 4) {
 				__m128 vecA = simd_load_row(A, i, k);
 				__m128 vecB = simd_load_col(B, j, k);
-				AB.matrix[FMATRIX_AT(i, j)] += _mm_cvtss_f32(_mm_dp_ps(vecA, vecB, 0xF1));
+				result += _mm_cvtss_f32(_mm_dp_ps(vecA, vecB, 0xF1));
 			}
+			// iterate through remaining elements
+			for (k; k < A.n; k++) {
+				result += MATRIX_AT(A, i, k) * MATRIX_AT(B, k, j);
+			}
+			AB.matrix[INDEX_AT(AB, i, j)] = result;
 		}
 	}
 

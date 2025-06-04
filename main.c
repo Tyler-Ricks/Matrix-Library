@@ -821,12 +821,10 @@ void test_simd_add() {
 }
 
 void run_simd_multiply(float* mat1, int r1, int c1, float* mat2, int r2, int c2) {
-	int count = 3; // 1 for A, 1 for B, 1 for result
-	pool frame = create_pool((count * r1 * c1 * r2 * c2) * sizeof(float));
+	int count = 4; // 1 for A, 1 for B, 1 for result
+	pool frame = create_pool(count * r1 * c1 * sizeof(float));
 
-	if (frame.start == NULL) {
-		exit(1);
-	}
+	if (frame.start == NULL) { exit(1); }
 
 	printf("\nA: \n");
 	fmatrix A = create_fmatrix(r1, c1, mat1, & frame);
@@ -847,11 +845,74 @@ void run_simd_multiply(float* mat1, int r1, int c1, float* mat2, int r2, int c2)
 	fmatrix C = fmatrix_simd_multiply(A, B, &frame);
 	print_fmatrix(C);
 
+	printf("\ncompare to:\n");
+	print_fmatrix(fmatrix_multiply(A, B, &frame));
+
 	free_pool(&frame);
 }
 
+void test_simd_multiply() {
+	// test normal matrices
+	{
+		float A[16] = {
+			1.0f,  5.0f,  9.0f, 13.0f,  
+			2.0f,  6.0f, 10.0f, 14.0f,  
+			3.0f,  7.0f, 11.0f, 15.0f, 
+			4.0f,  8.0f, 12.0f, 16.0f 
+		};
+		float B[16] = {
+			16.0f, 12.0f,  8.0f,  4.0f, 
+			15.0f, 11.0f,  7.0f,  3.0f, 
+			14.0f, 10.0f,  6.0f,  2.0f, 
+			13.0f,  9.0f,  5.0f,  1.0f  
+		};
+		run_simd_multiply(A, 4, 4, B, 4, 4);
+
+	}
+	// test mismatched matrices
+	{
+		float A[9] = {
+			1.0f,  5.0f,  9.0f, 
+			13.0f, 2.0f,  6.0f, 
+			10.0f, 14.0f, 3.0f
+		};
+		float B[16] = {
+			16.0f, 12.0f,  8.0f,  4.0f, 
+			15.0f, 11.0f,  7.0f,  3.0f, 
+			14.0f, 10.0f,  6.0f,  2.0f, 
+			13.0f,  9.0f,  5.0f,  1.0f  
+		};
+		run_simd_multiply(A, 3, 3, B, 4, 4);
+
+	}
+
+	// test matrices that don't fit into SIMD so well
+	{
+		float A[49] = {
+			1.0f,  8.0f, 15.0f, 22.0f, 29.0f, 36.0f, 43.0f,   // Column 0
+			2.0f,  9.0f, 16.0f, 23.0f, 30.0f, 37.0f, 44.0f,   // Column 1
+			3.0f, 10.0f, 17.0f, 24.0f, 31.0f, 38.0f, 45.0f,   // Column 2
+			4.0f, 11.0f, 18.0f, 25.0f, 32.0f, 39.0f, 46.0f,   // Column 3
+			5.0f, 12.0f, 19.0f, 26.0f, 33.0f, 40.0f, 47.0f,   // Column 4
+			6.0f, 13.0f, 20.0f, 27.0f, 34.0f, 41.0f, 48.0f,   // Column 5
+			7.0f, 14.0f, 21.0f, 28.0f, 35.0f, 42.0f, 49.0f    // Column 6
+		};
+		float B[49] = {
+			49.0f, 42.0f, 35.0f, 28.0f, 21.0f, 14.0f,  7.0f,   // Column 0
+			48.0f, 41.0f, 34.0f, 27.0f, 20.0f, 13.0f,  6.0f,   // Column 1
+			47.0f, 40.0f, 33.0f, 26.0f, 19.0f, 12.0f,  5.0f,   // Column 2
+			46.0f, 39.0f, 32.0f, 25.0f, 18.0f, 11.0f,  4.0f,   // Column 3
+			45.0f, 38.0f, 31.0f, 24.0f, 17.0f, 10.0f,  3.0f,   // Column 4
+			44.0f, 37.0f, 30.0f, 23.0f, 16.0f,  9.0f,  2.0f,   // Column 5
+			43.0f, 36.0f, 29.0f, 22.0f, 15.0f,  8.0f,  1.0f    // Column 6
+		};
+		run_simd_multiply(A, 7, 7, B, 7, 7);
+
+	}
+}
+
 int main() {
-	switch(16){
+	switch(17){
 	case 1:
 		test_transpose();
 		break;
@@ -899,6 +960,9 @@ int main() {
 		break;
 	case 16:
 		test_simd_add();
+		break;
+	case 17:
+		test_simd_multiply();
 		break;
 	default:
 		printf("no tests\n");
