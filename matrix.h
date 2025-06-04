@@ -7,6 +7,7 @@
 #include <math.h>
 #include <stdint.h>
 #include <xmmintrin.h> // for SSE SIMD stuff
+#include <smmintrin.h>
 
 #include "memory_pool.h"
 
@@ -67,8 +68,6 @@ void intswap(int *a, int *b);
 
 fmatrix fmatrix_add_in(fmatrix matA, fmatrix matB);
 fmatrix fmatrix_add(fmatrix matA, fmatrix matB, pool *frame);
-fmatrix simd_44_add(fmatrix A, fmatrix B, pool* frame);
-fmatrix fmatrix_simd_add(fmatrix A, fmatrix B, pool* frame);
 fmatrix fmatrix_subtract_in(fmatrix matA, fmatrix matB);
 fmatrix fmatrix_subtract(fmatrix matA, fmatrix matB, pool *frame);
 fmatrix fmatrix_scale_in(fmatrix mat, float c);
@@ -107,6 +106,17 @@ fmatrix fmatrix_row_space(fmatrix mat, pool* frame);
 
 fmatrix* fmatrix_LU_factorize(fmatrix mat, fmatrix result[3], pool* frame);
 fmatrix fmatrix_LU_solve(fmatrix A, fmatrix b, pool* frame);
+
+
+// SIMD stuff
+#define FLOAT_CAPACITY 4 // number of floats that fit in an SIM register (SSE fits 4)
+__m128 simd_load_cont(fmatrix A, int i);
+__m128 simd_load_stride(fmatrix A, int i);
+fmatrix simd_44_add(fmatrix A, fmatrix B, pool* frame);
+fmatrix fmatrix_simd_add(fmatrix A, fmatrix B, pool* frame);
+fmatrix fmatrix_simd_subtract(fmatrix A, fmatrix B, pool* frame);
+fmatrix fmatrix_simd_multiply(fmatrix A, fmatrix B, pool* frame);
+
 
 // graphics stuff
 

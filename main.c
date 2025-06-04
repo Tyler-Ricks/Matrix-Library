@@ -820,6 +820,36 @@ void test_simd_add() {
 	}
 }
 
+void run_simd_multiply(float* mat1, int r1, int c1, float* mat2, int r2, int c2) {
+	int count = 3; // 1 for A, 1 for B, 1 for result
+	pool frame = create_pool((count * r1 * c1 * r2 * c2) * sizeof(float));
+
+	if (frame.start == NULL) {
+		exit(1);
+	}
+
+	printf("\nA: \n");
+	fmatrix A = create_fmatrix(r1, c1, mat1, & frame);
+	print_fmatrix(A);
+
+	/*printf("\nB: \n");
+	fmatrix B = create_fmatrix(2, 3, mat2, &frame);
+	print_fmatrix(B);*/
+
+	printf("\nB: \n");
+	fmatrix B = create_fmatrix(r2, c2, mat2, &frame);
+	print_fmatrix(B);
+	//fmatrix_transpose_in(&B);
+	//printf("\nB^t:\n");
+	//print_fmatrix(B);
+
+	printf("\nAB:\n");
+	fmatrix C = fmatrix_simd_multiply(A, B, &frame);
+	print_fmatrix(C);
+
+	free_pool(&frame);
+}
+
 int main() {
 	switch(16){
 	case 1:

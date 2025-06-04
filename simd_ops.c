@@ -7,11 +7,27 @@ __m128 simd_load_cont(fmatrix A, int i) {
 	return _mm_loadu_ps(&A.matrix[i]);
 }
 
-__m128 simd_load_transpose(fmatrix A, int i) {
+__m128 simd_load_stride(fmatrix A, int i) {
 	return _mm_set_ps(	A.matrix[ARRAY_INDEX(A, i + 3)],
-		A.matrix[ARRAY_INDEX(A, i + 2)],
-		A.matrix[ARRAY_INDEX(A, i + 1)],
-		A.matrix[ARRAY_INDEX(A, i)]);
+						A.matrix[ARRAY_INDEX(A, i + 2)],
+						A.matrix[ARRAY_INDEX(A, i + 1)],
+						A.matrix[ARRAY_INDEX(A, i)]);
+}
+
+// loads 4 elements of matrix A at row r, starting from the column number start
+__m128 simd_load_row(fmatrix A, int r, int start) {
+	return _mm_set_ps(	MATRIX_AT(A, r, start + 3),
+						MATRIX_AT(A, r, start + 2),
+						MATRIX_AT(A, r, start + 1),
+						MATRIX_AT(A, r, start));
+}
+
+// loads 4 elements of matrix A at column c, starting from the row number start
+__m128 simd_load_col(fmatrix A, int c, int start) {
+	return _mm_set_ps(	MATRIX_AT(A, start + 3, c),
+						MATRIX_AT(A, start + 2, c),
+						MATRIX_AT(A, start + 1, c),
+						MATRIX_AT(A, start,		c));
 }
 
 // adds two 4x4 matrices, returns a new matrix with the result. 
@@ -52,8 +68,6 @@ fmatrix simd_44_add(fmatrix A, fmatrix B, pool* frame) {
 
 	return result;
 }
-
-
 #else
 fmatrix simd_44_add(fmatrix A, fmatrix B, pool* frame) {
 	if (A.m != 4 || A.n != 4) {
@@ -108,12 +122,12 @@ fmatrix fmatrix_simd_add(fmatrix A, fmatrix B, pool* frame) {
 		load_B = &simd_load_cont;
 	}
 	else if (A.transpose == 1) {	
-		load_A = &simd_load_transpose;
+		load_A = &simd_load_stride;
 		load_B = &simd_load_cont;
 	}
 	else {
 		load_A = &simd_load_cont;
-		load_B = &simd_load_transpose;
+		load_B = &simd_load_stride;
 	}
 
 	int size = A.m * A.n;
@@ -157,18 +171,18 @@ fmatrix fmatrix_simd_subtract(fmatrix A, fmatrix B, pool* frame) {
 		load_B = &simd_load_cont;
 	}
 	else if (A.transpose == 1) {	
-		load_A = &simd_load_transpose;
+		load_A = &simd_load_stride;
 		load_B = &simd_load_cont;
 	}
 	else {
 		load_A = &simd_load_cont;
-		load_B = &simd_load_transpose;
+		load_B = &simd_load_stride;
 	}
 
 	int size = A.m * A.n;
-	int bound = size - (size % 4);
+	int bound = size - (size % FLOAT_CAPACITY);
 	int i = 0;
-	for (i; i < bound; i += 4) {
+	for (i; i < bound; i += FLOAT_CAPACITY) {
 		__m128 colA = load_A(A, i);
 		//printf("colA: %f, %f, %f, %f\n", A.matrix[ARRAY_INDEX(A, i)], A.matrix[ARRAY_INDEX(A, i + 1)], A.matrix[ARRAY_INDEX(A, i + 2)], A.matrix[ARRAY_INDEX(A, i + 3)]);
 
@@ -185,4 +199,34 @@ fmatrix fmatrix_simd_subtract(fmatrix A, fmatrix B, pool* frame) {
 	}
 
 	return result;
+}
+
+// multiplies two matrices using simd, returns the result
+// returns ERROR_FMATRIX upon invalid multiplication
+fmatrix fmatrix_simd_multiply(fmatrix A, fmatrix B, pool* frame) {
+	if (A.n != B.m) {
+		printf("the number of columns of A must match the number of rows of B\n");
+		return ERROR_FMATRIX;
+	}
+
+	// initialize a 0 matrix
+	fmatrix AB = fmatrix_create_full(A.m, B.n, 0.0f, frame);
+	if(!AB.matrix){ return AB; }
+
+	// rows and columns that fit into simd registers
+	//int rows = AB.m - (AB.m % FLOAT_CAPACITY);
+	//int cols = AB.n - (AB.n % FLOAT_CAPACITY);
+	int dim = A.n - (A.n % FLOAT_CAPACITY); // number of elements that 
+
+	for (int i = 0; i < AB.m; i++) {
+		for (int j = 0; j < AB.n; j++) {
+			for (int k = 0; k < dim; k += 4) {
+				__m128 vecA = simd_load_row(A, i, k);
+				__m128 vecB = simd_load_col(B, j, k);
+				AB.matrix[FMATRIX_AT(i, j)] += _mm_cvtss_f32(_mm_dp_ps(vecA, vecB, 0xF1));
+			}
+		}
+	}
+
+	return AB;
 }
