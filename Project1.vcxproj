@@ -25,6 +25,7 @@
     <ClCompile Include="matrix_ops.c" />
     <ClCompile Include="matrix_util.c" />
     <ClCompile Include="memory_pool.c" />
+    <ClCompile Include="simd_ops.c" />
     <ClCompile Include="testing.c" />
     <ClCompile Include="vector.c" />
   </ItemGroup>

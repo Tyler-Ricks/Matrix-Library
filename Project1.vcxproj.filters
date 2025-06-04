@@ -39,6 +39,9 @@
     <ClCompile Include="matrix_util.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="simd_ops.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vector.h">
